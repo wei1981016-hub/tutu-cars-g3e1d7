@@ -112,12 +112,15 @@ def main():
         sys.exit("请先安装：pip install dashscope")
     dashscope.api_key = key
 
-    # 克隆音色ID形如 cosyvoice-v3.5-plus-bailian-xxx，模型必须与克隆时的目标模型一致
-    if args.voice.startswith("cosyvoice-v") and "-bailian-" in args.voice:
-        target = args.voice.split("-bailian-")[0]
-        if args.model != target:
-            print("检测到克隆音色，模型自动切换为 %s" % target)
-            args.model = target
+    # 克隆音色ID以目标模型名开头（控制台：cosyvoice-v3.5-plus-bailian-xxx；
+    # API复刻：cosyvoice-v2-xxx-xxxx），合成时模型必须与克隆目标模型一致
+    for m in ["cosyvoice-v3.5-plus", "cosyvoice-v3.5", "cosyvoice-v3-plus",
+              "cosyvoice-v3", "cosyvoice-v2", "cosyvoice-v1"]:
+        if args.voice.startswith(m + "-"):
+            if args.model != m:
+                print("检测到克隆音色，模型自动切换为 %s" % m)
+                args.model = m
+            break
 
     try:
         from dashscope.audio.tts_v2 import AudioFormat
