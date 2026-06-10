@@ -282,8 +282,8 @@ nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset
 <div id="ghost"></div>
 
 <div id="start">
-  <h1>图图认车车</h1>
-  <div class="sub">TuTu's Cars · 认识车车学英语</div>
+  <h1 id="start-title">认车车</h1>
+  <div class="sub" id="start-sub">认识车车学英语</div>
   <div class="hero animate" id="start-hero"></div>
   <button id="btn-start"><span class="ic"></span>开始玩</button>
   <div class="hint">建议 iPad 横屏 · 打开声音一起玩</div>
@@ -291,6 +291,10 @@ nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset
 
 <script>
 'use strict';
+/* ===== 宝宝名字（make_gift.py 生成定制版时会替换下面两行） ===== */
+const KID_NAME = '图图';
+const KID_EN = 'TuTu';
+
 /* ================= 小图标 ================= */
 const IC = (p, f) => '<svg viewBox="0 0 24 24" fill="' + (f || 'none') +
   '" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
@@ -835,7 +839,7 @@ const VEHICLES = [
 const SCENES = [
 { id:'thief', v:'policecar',
   q:'不好啦！马路上有个坏人在捣乱！快，开哪辆车去抓住他？',
-  win:'呜哇呜哇！警察叔叔把坏人抓住啦！图图立大功！',
+  win:'呜哇呜哇！警察叔叔把坏人抓住啦！' + KID_NAME + '立大功！',
   exclude:[],
   art:
     '<rect x="40" y="60" width="56" height="100" rx="4" fill="#BFD9F2"/><rect x="120" y="40" width="48" height="120" rx="4" fill="#A8CBEC"/>' +
@@ -1137,11 +1141,11 @@ const Voice = {
   }
 };
 const L = {
-  welcome:'你好呀！欢迎来到图图认车车！点一点，认识好多车车吧！',
+  welcome:'你好呀！欢迎来到' + KID_NAME + '认车车！点一点，认识好多车车吧！',
   try_again:'哎呀，再试试！',
   play_hint:'用小手把车车拖到上面的画里，试试看！',
   play_wrong:'再想想，应该开哪辆车呢？',
-  praise:['太棒了！','真厉害！','答对啦！','图图真棒！','好聪明呀！']
+  praise:['太棒了！','真厉害！','答对啦！', KID_NAME + '真棒！','好聪明呀！']
 };
 
 /* ================= 彩带 / 烟花 ================= */
@@ -1513,6 +1517,9 @@ function initIcons() {
   $('#btn-start').querySelector('.ic').outerHTML = ICONS.play;
   $('#tap-hint').innerHTML = ICONS.hand + '点一点车车，看它干活！';
   $('#start-hero').innerHTML = svgOf(VEHICLES[0]);
+  $('#start-title').textContent = KID_NAME + '认车车';
+  $('#start-sub').textContent = (KID_EN ? KID_EN + "'s Cars · " : '') + '认识车车学英语';
+  document.title = KID_NAME + '认车车' + (KID_EN ? ' · ' + KID_EN + "'s Cars" : '');
 }
 Speech.init();
 FX.init();

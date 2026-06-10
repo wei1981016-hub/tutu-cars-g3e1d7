@@ -44,7 +44,7 @@ VEHICLES = [
     ("tractor", "拖拉机", "Tractor", "拖拉机突突突，在田地里帮农民伯伯干活！", "突突突突，拖拉机干活啦！"),
 ]
 SCENES = [
-    ("thief", "不好啦！马路上有个坏人在捣乱！快，开哪辆车去抓住他？", "呜哇呜哇！警察叔叔把坏人抓住啦！图图立大功！"),
+    ("thief", "不好啦！马路上有个坏人在捣乱！快，开哪辆车去抓住他？", "(占位，build_lines 里按宝宝名字生成)"),
     ("fire", "着火啦！小房子着火啦！快开哪辆车去灭火？", "水枪喷水，火扑灭啦！消防员真勇敢！"),
     ("sick", "哎呀，有人生病了，好难受呀！快开哪辆车去帮忙？", "呜哇呜哇，快快送到医院，病人得救啦！"),
     ("pit", "工地上要挖一个大大的坑，开哪辆车来帮忙呀？", "挖呀挖，大坑挖好啦！真能干！"),
@@ -57,10 +57,13 @@ SCENES = [
     ("beam", "盖大楼要把钢梁吊到楼顶，开哪辆车来帮忙？", "钢梁吊上去啦，大楼越盖越高！"),
     ("farm", "田地里要翻土种庄稼，农民伯伯在等谁呀？", "突突突，田地翻好啦，等着大丰收！"),
 ]
-PRAISE = ["太棒了！", "真厉害！", "答对啦！", "图图真棒！", "好聪明呀！"]
+
+# 含宝宝名字的 key（make_gift.py 据此做语音包缓存复用）
+NAME_KEYS = ["welcome", "praise_3", "sw_thief"]
 
 
-def build_lines():
+def build_lines(name="图图"):
+    praise = ["太棒了！", "真厉害！", "答对啦！", name + "真棒！", "好聪明呀！"]
     lines = {}
     for vid, zh, en, desc, act in VEHICLES:
         lines["n_" + vid] = (zh, "zh")
@@ -72,9 +75,10 @@ def build_lines():
     for sid, q, win in SCENES:
         lines["s_" + sid] = (q, "zh")
         lines["sw_" + sid] = (win, "zh")
-    for i, p in enumerate(PRAISE):
+    lines["sw_thief"] = ("呜哇呜哇！警察叔叔把坏人抓住啦！" + name + "立大功！", "zh")
+    for i, p in enumerate(praise):
         lines["praise_%d" % i] = (p, "zh")
-    lines["welcome"] = ("你好呀！欢迎来到图图认车车！点一点，认识好多车车吧！", "zh")
+    lines["welcome"] = ("你好呀！欢迎来到" + name + "认车车！点一点，认识好多车车吧！", "zh")
     lines["try_again"] = ("哎呀，再试试！", "zh")
     lines["play_hint"] = ("用小手把车车拖到上面的画里，试试看！", "zh")
     lines["play_wrong"] = ("再想想，应该开哪辆车呢？", "zh")
@@ -85,12 +89,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--voice", default="longxiaochun_v2", help="CosyVoice 音色名或克隆音色ID")
     ap.add_argument("--model", default="cosyvoice-v2", help="模型名")
+    ap.add_argument("--name", default="图图", help="宝宝名字（影响 welcome/praise_3/sw_thief 三条）")
     ap.add_argument("--outdir", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio"))
     ap.add_argument("--list", action="store_true", help="只列出台词，不生成")
     ap.add_argument("--force", action="store_true", help="覆盖已有文件")
     args = ap.parse_args()
 
-    lines = build_lines()
+    lines = build_lines(args.name)
     if args.list:
         for k, (t, lang) in lines.items():
             print("%-16s [%s] %s" % (k, lang, t))
