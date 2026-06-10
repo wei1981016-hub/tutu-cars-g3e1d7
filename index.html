@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#BFE5FF">
+<meta name="robots" content="noindex, nofollow">
+<title>图图认车车 · TuTu's Cars</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;overflow:hidden}
+body{
+  font-family:"Yuanti SC","YouYuan",ui-rounded,"Hiragino Maru Gothic ProN","Chalkboard SE","Comic Sans MS","PingFang SC",system-ui,sans-serif;
+  background:linear-gradient(180deg,#BFE5FF 0%,#E4F5FF 48%,#FFF4D8 100%);
+  color:#2b4a6f;touch-action:manipulation;-webkit-touch-callout:none;
+}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
+svg{display:block}
+
+.cloud{position:fixed;background:#fff;opacity:.55;border-radius:999px;pointer-events:none;z-index:0}
+.cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+#cloud1{width:150px;height:46px;top:7%;left:6%}
+#cloud1::before{width:60px;height:60px;top:-26px;left:24px}
+#cloud1::after{width:44px;height:44px;top:-18px;left:74px}
+#cloud2{width:120px;height:38px;top:12%;right:8%}
+#cloud2::before{width:48px;height:48px;top:-22px;left:20px}
+#cloud2::after{width:36px;height:36px;top:-14px;left:60px}
+
+#app{position:relative;z-index:1;display:flex;flex-direction:column;height:100%}
+main{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 18px 24px;display:none}
+.view.active{display:block}
+#view-quiz.active{display:flex;flex-direction:column;justify-content:center}
+#view-play.active{display:flex;flex-direction:column}
+.view-title{font-size:20px;font-weight:800;color:#3a6ea5;margin:4px 6px 14px}
+
+.v-svg{width:100%;height:auto}
+
+/* ===== 图鉴 ===== */
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px}
+.card{background:#fff;border-radius:26px;padding:12px 10px 14px;box-shadow:0 5px 0 rgba(58,110,165,.13);
+  position:relative;transition:transform .15s ease;text-align:center}
+.card:active{transform:scale(.94)}
+.card-name{display:block;font-size:22px;font-weight:900;color:#2b4a6f;margin-top:2px}
+.card-en{display:block;font-size:14px;font-weight:700;color:#6b87a8;letter-spacing:.5px}
+
+/* ===== 详情 ===== */
+#detail{position:fixed;inset:0;z-index:40;display:none;flex-direction:column;padding:12px;background:#FFFDF6}
+#detail.open{display:flex}
+.detail-close{position:absolute;top:14px;left:14px;width:66px;height:66px;border-radius:50%;background:#fff;
+  box-shadow:0 5px 0 rgba(58,110,165,.18);display:flex;align-items:center;justify-content:center;z-index:2}
+.detail-close:active{transform:scale(.9)}
+.detail-close svg{width:30px;height:30px}
+.detail-fig{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding-top:6px;cursor:pointer}
+.detail-fig .v-svg{height:min(46vh,420px);width:auto;max-width:90vw}
+.tap-hint{display:flex;align-items:center;justify-content:center;gap:8px;color:#E07B1F;font-size:17px;font-weight:800;
+  animation:hintPulse 1.6s ease-in-out infinite}
+.tap-hint svg{width:22px;height:22px}
+@keyframes hintPulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
+.detail-info{text-align:center;padding:6px 16px calc(12px + env(safe-area-inset-bottom))}
+.d-zh{font-size:clamp(32px,5.5vw,46px);font-weight:900;color:#27415e;display:inline-block}
+.d-en{font-size:clamp(22px,4vw,30px);font-weight:800;color:#E07B1F;letter-spacing:1.5px;margin-left:14px;display:inline-block}
+.d-desc{font-size:clamp(17px,2.8vw,22px);line-height:1.5;max-width:680px;margin:6px auto 0;color:#41608a}
+
+/* ===== 找一找 ===== */
+#quiz-q{display:flex;align-items:center;justify-content:center;gap:16px;margin:4px 0 22px}
+.q-text{font-size:clamp(25px,4.5vw,36px);font-weight:900;color:#27415e}
+.q-text b{color:#E07B1F}
+.q-say{width:68px;height:68px;border-radius:50%;background:#4FA3F7;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 5px 0 #2f7fd4;flex:none}
+.q-say:active{transform:translateY(3px);box-shadow:0 2px 0 #2f7fd4}
+.q-say svg{width:32px;height:32px}
+#quiz-opts{display:flex;gap:22px;justify-content:center;align-items:stretch;flex-wrap:wrap;padding:0 8px}
+.opt{background:#fff;border-radius:30px;padding:16px 14px;width:min(39vw,340px);min-width:230px;
+  box-shadow:0 6px 0 rgba(58,110,165,.14);border:5px solid transparent;transition:transform .15s ease}
+.opt:active{transform:scale(.95)}
+#quiz-opts.n3 .opt{width:min(29vw,300px);min-width:200px}
+.opt.win{border-color:#48BB78;animation:pop .55s ease}
+.opt.lose{animation:shake .5s ease;opacity:.55}
+.opt.dim{opacity:.4;pointer-events:none}
+
+/* 答对奖励横幅 */
+#reward{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;pointer-events:none}
+#reward.show{display:flex}
+.reward-box{display:flex;flex-direction:column;align-items:center;gap:6px;animation:rewardPop 1.6s ease forwards}
+.reward-box svg{width:130px;height:130px;filter:drop-shadow(0 6px 0 rgba(176,138,46,.35))}
+.reward-txt{font-size:46px;font-weight:900;color:#E07B1F;text-shadow:0 3px 0 #fff}
+@keyframes rewardPop{0%{transform:scale(.2);opacity:0}18%{transform:scale(1.15);opacity:1}30%{transform:scale(1)}
+  78%{transform:scale(1);opacity:1}100%{transform:scale(1.1);opacity:0}}
+
+/* ===== 玩一玩 ===== */
+#scene-box{position:relative;flex:1;min-height:0;background:#fff;border-radius:26px;
+  box-shadow:0 5px 0 rgba(58,110,165,.13);overflow:hidden}
+#scene-svg{width:100%;height:100%}
+#scene-q{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:12px;
+  padding:10px 14px;background:rgba(255,255,255,.88)}
+#scene-q .q-say{width:54px;height:54px}
+#scene-q .q-say svg{width:26px;height:26px}
+#s-text{font-size:clamp(17px,2.6vw,24px);font-weight:900;color:#27415e;line-height:1.3}
+#scene-vehicle{position:absolute;bottom:0;left:0;width:200px;pointer-events:none;
+  transform:translateX(-150vw);transition:transform 2s ease}
+#play-opts{display:flex;gap:16px;justify-content:center;padding:14px 6px 4px;flex:none}
+.p-opt{background:#fff;border-radius:22px;padding:10px;width:min(27vw,220px);min-width:150px;
+  box-shadow:0 5px 0 rgba(58,110,165,.14);border:4px solid transparent;position:relative;touch-action:none}
+.p-opt.dragging{opacity:.3}
+.p-opt.gone{visibility:hidden}
+.p-opt.wiggle{animation:shake .5s ease}
+.p-opt .p-name{display:block;text-align:center;font-size:16px;font-weight:800;color:#41608a;margin-top:2px}
+#ghost{position:fixed;z-index:90;width:170px;pointer-events:none;display:none;filter:drop-shadow(0 8px 10px rgba(45,55,72,.3))}
+#ghost.back{transition:left .35s ease,top .35s ease}
+.prop.solved{animation:solveFade 1.2s ease forwards}
+@keyframes solveFade{to{opacity:0;transform:scale(.6)}}
+.stars{opacity:0}
+.stars.show{opacity:1}
+.stars.show path{animation:starTwinkle 1s ease-in-out infinite alternate}
+@keyframes starTwinkle{from{opacity:.5}to{opacity:1}}
+.flame{animation:flick .45s ease-in-out infinite alternate;transform-origin:center bottom;transform-box:fill-box}
+@keyframes flick{from{transform:scaleY(.85) scaleX(1.05)}to{transform:scaleY(1.1) scaleX(.95)}}
+.dustc{animation:dustFloat 2.4s ease-in-out infinite alternate}
+@keyframes dustFloat{from{transform:translateX(0)}to{transform:translateX(10px)}}
+
+/* ===== 导航 ===== */
+nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  background:#fff;box-shadow:0 -5px 18px rgba(58,110,165,.12);z-index:5}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:9px 4px;border-radius:20px;color:#7d96b5;font-weight:800;font-size:15px;min-height:68px;transition:transform .12s ease}
+.tab svg{width:32px;height:32px}
+.tab:active{transform:scale(.93)}
+.tab.active{color:#E07B1F;background:#FFE9C9}
+
+/* ===== 开始页 ===== */
+#start{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;background:linear-gradient(180deg,#BFE5FF 0%,#E4F5FF 55%,#FFF4D8 100%);padding:20px;text-align:center}
+#start h1{font-size:clamp(36px,7vw,60px);font-weight:900;color:#2B6CB0;margin:0;text-shadow:0 4px 0 rgba(255,255,255,.9)}
+#start .sub{font-size:clamp(17px,3vw,24px);font-weight:800;color:#E07B1F;letter-spacing:2px;margin:2px 0 8px}
+#start .hero{width:min(52vw,380px)}
+#btn-start{margin-top:16px;background:#FF8A3D;color:#fff;font-size:clamp(26px,4.5vw,34px);font-weight:900;
+  padding:18px 58px;border-radius:999px;box-shadow:0 8px 0 #d96a1e;display:flex;align-items:center;gap:14px}
+#btn-start:active{transform:translateY(5px);box-shadow:0 3px 0 #d96a1e}
+#btn-start svg{width:30px;height:30px}
+#start .hint{margin-top:16px;font-size:14px;color:#7d96b5;font-weight:700}
+
+#fx{position:fixed;inset:0;pointer-events:none;z-index:80}
+
+/* ===== 车辆常驻动画（.animate 容器内） ===== */
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rock{0%,100%{transform:rotate(3deg)}50%{transform:rotate(-6deg)}}
+@keyframes wobble{0%,100%{transform:rotate(3deg)}50%{transform:rotate(-3deg)}}
+@keyframes hookdown{0%,100%{transform:translateY(0)}50%{transform:translateY(12px)}}
+@keyframes blinkA{0%,44%{opacity:1}50%,94%{opacity:.15}100%{opacity:1}}
+@keyframes blinkB{0%,44%{opacity:.15}50%,94%{opacity:1}100%{opacity:.15}}
+@keyframes spray{0%{opacity:0;transform:translate(0,-3px)}30%{opacity:1}100%{opacity:0;transform:translate(6px,9px)}}
+@keyframes smoke{0%{opacity:.95;transform:translateY(0) scale(.6)}100%{opacity:0;transform:translateY(-20px) scale(1.35)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.13)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}50%{transform:translateX(8px)}75%{transform:translateX(-5px)}}
+.animate .v-svg{animation:bob 2.4s ease-in-out infinite}
+.animate .wheel{animation:spin 1.7s linear infinite}
+.animate .part-arm,.animate .part-sway{animation:rock 3s ease-in-out infinite}
+.animate .part-drum{animation:wobble 1.1s ease-in-out infinite}
+.animate .part-hook{animation:hookdown 3s ease-in-out infinite}
+.animate .part-water{animation:spray 1s linear infinite}
+.animate .part-smoke{animation:smoke 1.4s ease-out infinite}
+.animate .light-a{animation:blinkA 1s steps(1) infinite}
+.animate .light-b{animation:blinkB 1s steps(1) infinite}
+
+/* ===== 互动动作（点车触发，一次性） ===== */
+@keyframes digOnce{0%{transform:rotate(0)}30%{transform:rotate(17deg)}50%{transform:rotate(19deg)}80%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
+@keyframes tiltOnce{0%,100%{transform:rotate(0)}35%{transform:rotate(-24deg)}70%{transform:rotate(-24deg)}}
+@keyframes pushOnce{0%,100%{transform:translateX(0)}35%{transform:translateX(-13px)}65%{transform:translateX(-13px)}}
+@keyframes scoopOnce{0%,100%{transform:rotate(0)}35%{transform:rotate(-18deg)}70%{transform:rotate(-14deg)}}
+@keyframes liftOnce{0%,100%{transform:translateY(0)}40%{transform:translateY(-30px)}75%{transform:translateY(-30px)}}
+@keyframes dropOnce{0%,100%{transform:translateY(0)}40%{transform:translateY(22px)}75%{transform:translateY(20px)}}
+@keyframes ladderOnce{0%,100%{transform:rotate(0)}40%{transform:rotate(-16deg)}75%{transform:rotate(-16deg)}}
+@keyframes extendOnce{0%,100%{transform:translateX(0)}40%{transform:translateX(-26px)}75%{transform:translateX(-26px)}}
+@keyframes swayOnce{0%,100%{transform:rotate(0)}30%{transform:rotate(8deg)}65%{transform:rotate(-6deg)}}
+@keyframes lidOnce{0%,100%{transform:rotate(0)}35%{transform:rotate(-38deg)}70%{transform:rotate(-38deg)}}
+@keyframes doorOnce{0%,100%{transform:scaleX(1)}35%{transform:scaleX(.15)}70%{transform:scaleX(.15)}}
+@keyframes spinFastK{to{transform:rotate(360deg)}}
+@keyframes flashFast{0%,100%{opacity:1}25%{opacity:.1}50%{opacity:1}75%{opacity:.1}}
+@keyframes trolleyOnce{0%,100%{transform:translateX(0)}40%{transform:translateX(-46px)}75%{transform:translateX(-46px)}}
+@keyframes fxFall{0%{opacity:0;transform:translate(0,-6px)}25%{opacity:1}100%{opacity:0;transform:translate(9px,30px)}}
+@keyframes fxPour{0%{opacity:0}30%{opacity:1}100%{opacity:0;transform:translateY(18px)}}
+.fx{opacity:0}
+.acting .v-svg{animation:bob .5s ease-in-out 4}
+.acting[data-vid="excavator"] .part-arm{animation:digOnce 2.4s ease-in-out 1}
+.acting[data-vid="excavator"] .fx-dig{animation:fxFall .8s ease-in .9s 2}
+.acting[data-vid="bulldozer"] .part-blade{animation:pushOnce 2.2s ease-in-out 1}
+.acting[data-vid="bulldozer"] .fx-dirt{animation:fxFall .8s ease-in .5s 2}
+.acting[data-vid="loader"] .part-scoop{animation:scoopOnce 2.2s ease-in-out 1}
+.acting[data-vid="loader"] .fx-dirt{animation:fxFall .8s ease-in .7s 2}
+.acting[data-vid="crane"] .part-hook{animation:dropOnce 2.4s ease-in-out 1}
+.acting[data-vid="towercrane"] .part-trolley{animation:trolleyOnce 2.6s ease-in-out 1}
+.acting[data-vid="dumptruck"] .part-bed{animation:tiltOnce 2.6s ease-in-out 1}
+.acting[data-vid="dumptruck"] .fx-dirt{animation:fxFall .8s ease-in .8s 2}
+.acting[data-vid="mixer"] .part-drum{animation:spinFastK .5s linear 4}
+.acting[data-vid="roller"] .wheel{animation:spinFastK .5s linear 5}
+.acting[data-vid="forklift"] .part-fork{animation:liftOnce 2.6s ease-in-out 1}
+.acting[data-vid="pumptruck"] .part-sway{animation:swayOnce 2.4s ease-in-out 1}
+.acting[data-vid="pumptruck"] .fx-pour{animation:fxPour .8s ease-in .8s 2}
+.acting[data-vid="grader"] .part-blade{animation:pushOnce 2.2s ease-in-out 1}
+.acting[data-vid="miningtruck"] .part-bed{animation:tiltOnce 2.8s ease-in-out 1}
+.acting[data-vid="miningtruck"] .fx-rock{animation:fxFall .9s ease-in .9s 2}
+.acting[data-vid="firetruck"] .part-ladder{animation:ladderOnce 2.8s ease-in-out 1}
+.acting[data-vid="firetruck"] .light-a{animation:flashFast .5s linear 5}
+.acting[data-vid="policecar"] .light-a{animation:flashFast .4s linear 6}
+.acting[data-vid="policecar"] .light-b{animation:flashFast .4s linear .2s 6}
+.acting[data-vid="ambulance"] .light-a{animation:flashFast .4s linear 6}
+.acting[data-vid="bus"] .part-door{animation:doorOnce 2.4s ease-in-out 1;transform-origin:left center;transform-box:fill-box}
+.acting[data-vid="garbagetruck"] .part-lid{animation:lidOnce 2.4s ease-in-out 1}
+.acting[data-vid="watertruck"] .part-water{animation:spray .5s linear 5}
+.acting[data-vid="schoolbus"] .part-sign{animation:swayOnce 2.4s ease-in-out 1}
+.acting[data-vid="schoolbus"] .light-a,.acting[data-vid="schoolbus"] .light-b{animation:flashFast .5s linear 5}
+.acting[data-vid="tractor"] .part-smoke{animation:smoke .6s ease-out 4}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+@media (max-width:560px){
+  #grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:12px}
+  .opt,#quiz-opts.n3 .opt{width:min(86vw,320px)}
+  .card-name{font-size:19px}
+  #play-opts{gap:10px}
+  .p-opt{min-width:104px;width:30vw}
+  .p-opt .p-name{font-size:13px}
+}
+</style>
+</head>
+<body>
+<div class="cloud" id="cloud1"></div>
+<div class="cloud" id="cloud2"></div>
+<canvas id="fx"></canvas>
+
+<div id="app">
+  <main>
+    <section id="view-book" class="view active" aria-label="认一认">
+      <h1 class="view-title">点一点，认识车车！</h1>
+      <div id="grid"></div>
+    </section>
+
+    <section id="view-quiz" class="view" aria-label="找一找">
+      <div id="quiz-q">
+        <button class="q-say" id="btn-q-say" aria-label="再听一遍题目"></button>
+        <div class="q-text">哪一个是 <b id="q-name"></b>？</div>
+      </div>
+      <div id="quiz-opts"></div>
+    </section>
+
+    <section id="view-play" class="view" aria-label="玩一玩">
+      <div id="scene-box">
+        <svg id="scene-svg" viewBox="0 0 420 230" preserveAspectRatio="xMidYMax slice"></svg>
+        <div id="scene-vehicle"></div>
+        <div id="scene-q">
+          <button class="q-say" id="btn-s-say" aria-label="再听一遍"></button>
+          <div id="s-text"></div>
+        </div>
+      </div>
+      <div id="play-opts"></div>
+    </section>
+  </main>
+
+  <nav id="tabs">
+    <button class="tab active" data-view="book" aria-label="认一认"></button>
+    <button class="tab" data-view="quiz" aria-label="找一找"></button>
+    <button class="tab" data-view="play" aria-label="玩一玩"></button>
+  </nav>
+</div>
+
+<div id="detail" role="dialog" aria-modal="true">
+  <button class="detail-close" id="btn-close" aria-label="关闭"></button>
+  <div class="detail-fig animate" id="d-fig"></div>
+  <div class="tap-hint" id="tap-hint"></div>
+  <div class="detail-info">
+    <div><span class="d-zh" id="d-zh"></span><span class="d-en" id="d-en"></span></div>
+    <div class="d-desc" id="d-desc"></div>
+  </div>
+</div>
+
+<div id="reward"><div class="reward-box" id="reward-box"></div></div>
+<div id="ghost"></div>
+
+<div id="start">
+  <h1>图图认车车</h1>
+  <div class="sub">TuTu's Cars · 认识车车学英语</div>
+  <div class="hero animate" id="start-hero"></div>
+  <button id="btn-start"><span class="ic"></span>开始玩</button>
+  <div class="hint">建议 iPad 横屏 · 打开声音一起玩</div>
+</div>
+
+<script>
+'use strict';
+/* ================= 小图标 ================= */
+const IC = (p, f) => '<svg viewBox="0 0 24 24" fill="' + (f || 'none') +
+  '" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+const ICONS = {
+  book: IC('<path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/>'),
+  search: IC('<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>'),
+  game: IC('<line x1="6" y1="11" x2="10" y2="11"/><line x1="8" y1="9" x2="8" y2="13"/><line x1="15" y1="12" x2="15.01" y2="12"/><line x1="18" y1="10" x2="18.01" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.152A4 4 0 0 0 17.32 5z"/>'),
+  speaker: IC('<path d="M11 5 6 9H2v6h4l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>'),
+  close: IC('<path d="M18 6 6 18M6 6l12 12" stroke="#3a6ea5"/>'),
+  play: IC('<path d="m6 4 14 8-14 8z" fill="currentColor" stroke="none"/>'),
+  hand: IC('<path d="M9 11V5a1.5 1.5 0 0 1 3 0v6m0-2.5a1.5 1.5 0 0 1 3 0V11m0-1a1.5 1.5 0 0 1 3 0v4a7 7 0 0 1-7 7 7 7 0 0 1-6-3.5L3.5 14A1.6 1.6 0 0 1 6 12.3l1 1V7a1.5 1.5 0 0 1 2-1.4"/>'),
+  bigstar: '<svg viewBox="0 0 24 24" fill="#FFD23E" stroke="#E0A800" stroke-width="1" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>'
+};
+
+/* ================= 车辆零件库 ================= */
+function W(cx, cy, r, hub) {
+  hub = hub || '#C8D2DE';
+  let s = '<g class="wheel" style="transform-origin:' + cx + 'px ' + cy + 'px">';
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#1B232E"/>';
+  for (let i = 0; i < 8; i++) {
+    s += '<rect x="' + (cx - 1.8) + '" y="' + (cy - r) + '" width="3.6" height="' + (r * .2) +
+      '" rx="1.4" fill="#0B1118" transform="rotate(' + i * 45 + ' ' + cx + ' ' + cy + ')"/>';
+  }
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r * .60 + '" fill="#E8EDF3"/>';
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r * .48 + '" fill="' + hub + '"/>';
+  for (let i = 0; i < 6; i++) {
+    s += '<circle cx="' + cx + '" cy="' + (cy - r * .32) + '" r="' + Math.max(1.4, r * .07) +
+      '" fill="#5A6B82" transform="rotate(' + i * 60 + ' ' + cx + ' ' + cy + ')"/>';
+  }
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r * .15 + '" fill="#39434F"/></g>';
+  return s;
+}
+function TRACKS(x, y, w, h) {
+  const r = h / 2;
+  let s = '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '" fill="#232B36"/>';
+  for (let cx = x + 6; cx < x + w - 4; cx += 11) {
+    s += '<rect x="' + cx + '" y="' + (y + h - 3) + '" width="5" height="5" rx="2" fill="#0B1118"/>';
+  }
+  s += '<circle cx="' + (x + r) + '" cy="' + (y + r) + '" r="' + r * .55 + '" fill="#8D9AAB"/>' +
+       '<circle cx="' + (x + r) + '" cy="' + (y + r) + '" r="' + r * .22 + '" fill="#39434F"/>' +
+       '<circle cx="' + (x + w - r) + '" cy="' + (y + r) + '" r="' + r * .55 + '" fill="#8D9AAB"/>' +
+       '<circle cx="' + (x + w - r) + '" cy="' + (y + r) + '" r="' + r * .22 + '" fill="#39434F"/>';
+  const n = 3, step = (w - 2 * h) / (n + 1);
+  for (let i = 1; i <= n; i++) {
+    const cx = x + h + step * i;
+    s += '<circle cx="' + cx + '" cy="' + (y + h * .62) + '" r="' + h * .2 + '" fill="#8D9AAB"/>' +
+         '<circle cx="' + cx + '" cy="' + (y + h * .62) + '" r="' + h * .08 + '" fill="#39434F"/>';
+  }
+  return s;
+}
+function GLASS(x, y, w, h, r) {
+  return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + (r || 4) +
+    '" fill="#8FD0F5" stroke="#FFFFFF" stroke-width="3"/>' +
+    '<polygon points="' + (x + w * .18) + ',' + (y + h) + ' ' + (x + w * .42) + ',' + y + ' ' +
+    (x + w * .56) + ',' + y + ' ' + (x + w * .32) + ',' + (y + h) + '" fill="#FFFFFF" opacity=".4"/>';
+}
+function HYD(x1, y1, x2, y2) {
+  const mx = x1 + (x2 - x1) * .55, my = y1 + (y2 - y1) * .55;
+  return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + mx + '" y2="' + my + '" stroke="#39434F" stroke-width="7" stroke-linecap="round"/>' +
+         '<line x1="' + mx + '" y1="' + my + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#AEB9C6" stroke-width="3.5" stroke-linecap="round"/>';
+}
+function EXH(x, y, h) {
+  return '<rect x="' + x + '" y="' + (y - h) + '" width="6" height="' + h + '" rx="2" fill="#39434F"/>' +
+         '<rect x="' + (x - 1.5) + '" y="' + (y - h - 4) + '" width="9" height="5" rx="2" fill="#39434F"/>';
+}
+function BEACON(cx, y) {
+  return '<rect x="' + (cx - 6) + '" y="' + (y - 3) + '" width="12" height="3.5" rx="1.5" fill="#39434F"/>' +
+         '<path class="light-a" d="M' + (cx - 4.5) + ' ' + (y - 3) + ' v-4 q4.5 -4.5 9 0 v4 z" fill="#FFB020"/>';
+}
+const SHADOW = '<ellipse cx="100" cy="128" rx="76" ry="6" fill="rgba(45,55,72,.13)"/>';
+
+/* ================= 20 种车辆（写实卡通版） ================= */
+const VEHICLES = [
+{ id:'excavator', zh:'挖掘机', en:'Excavator', color:'#F6C344',
+  desc:'挖掘机有长长的手臂和大铲斗，最会挖土啦！',
+  act:{ sfx:'dig', line:'挖呀挖，挖到一大铲土！' },
+  body:
+    TRACKS(36,100,126,26) +
+    '<rect x="42" y="88" width="116" height="14" rx="4" fill="#D69E2E"/>' +
+    '<rect x="42" y="97" width="116" height="5" rx="2" fill="#B7821D"/>' +
+    '<g class="part-arm" style="transform-origin:112px 86px">' +
+      '<path d="M106 92 Q112 74 126 58 L148 32 L163 43 L144 66 Q132 80 126 96 Z" fill="#E8A33D"/>' +
+      '<path d="M113 84 L150 41" stroke="#C98E1B" stroke-width="3.5" stroke-linecap="round"/>' +
+      HYD(100,82,132,57) +
+      '<path d="M148 32 L188 60 L181 71 L141 45 Z" fill="#F6C344"/>' +
+      HYD(152,44,174,60) +
+      '<path d="M180 62 Q199 71 192 91 L172 82 Q171 70 178 62 Z" fill="#7B8794"/>' +
+      '<path d="M177 88 l4 7 4 -5 4 7 4 -5" stroke="#5A6B82" stroke-width="3" fill="none"/>' +
+      '<circle cx="152" cy="39" r="4.5" fill="#9C6516"/><circle cx="183" cy="66" r="4" fill="#9C6516"/>' +
+      '<g class="fx fx-dig"><circle cx="186" cy="98" r="4" fill="#8B6B4A"/><circle cx="194" cy="104" r="3" fill="#A3805C"/><circle cx="180" cy="106" r="3.5" fill="#8B6B4A"/></g>' +
+    '</g>' +
+    '<rect x="100" y="52" width="56" height="38" rx="8" fill="#F6C344"/>' +
+    '<rect x="100" y="80" width="56" height="10" rx="4" fill="#DBA424"/>' +
+    '<path d="M138 60 h12 M138 67 h12 M138 74 h12" stroke="#B7821D" stroke-width="3"/>' +
+    EXH(108,52,12) +
+    '<rect x="48" y="38" width="46" height="52" rx="8" fill="#F6C344"/>' +
+    '<rect x="48" y="38" width="46" height="7" rx="3.5" fill="#FFDD77"/>' +
+    GLASS(54,46,26,28) +
+    '<rect x="84" y="48" width="7" height="36" rx="2" fill="#E3AF2C"/>' +
+    '<circle cx="112" cy="88" r="6.5" fill="#B7821D"/><circle cx="112" cy="88" r="2.8" fill="#7A5A10"/>' },
+
+{ id:'bulldozer', zh:'推土机', en:'Bulldozer', color:'#F6C344',
+  desc:'推土机有大大的铲刀，可以把土推得平平的！',
+  act:{ sfx:'dig', line:'推呀推，把土推平啦！' },
+  body:
+    TRACKS(54,94,102,32) +
+    '<rect x="52" y="88" width="106" height="6" rx="3" fill="#D69E2E"/>' +
+    '<rect x="60" y="62" width="64" height="32" rx="6" fill="#F6C344"/>' +
+    '<rect x="60" y="86" width="64" height="8" rx="3" fill="#DBA424"/>' +
+    '<rect x="60" y="66" width="9" height="24" rx="3" fill="#B7821D"/>' +
+    '<path d="M63 70 v16 M66.5 70 v16" stroke="#8a6a10" stroke-width="1.6"/>' +
+    EXH(80,62,18) +
+    '<circle cx="100" cy="56" r="6" fill="#39434F"/>' +
+    '<rect x="118" y="36" width="40" height="58" rx="7" fill="#E8A33D"/>' +
+    '<rect x="118" y="36" width="40" height="7" rx="3.5" fill="#FFD27A"/>' +
+    GLASS(124,44,28,26) +
+    '<g class="part-blade">' +
+      '<rect x="42" y="74" width="24" height="9" rx="4" fill="#B7821D"/>' +
+      HYD(74,58,52,68) +
+      '<path d="M48 54 L48 116 L40 116 Q18 96 28 68 Q34 56 48 54 Z" fill="#ED8936"/>' +
+      '<path d="M42 62 Q34 78 38 98" stroke="#C05621" stroke-width="4" fill="none"/>' +
+      '<rect x="32" y="110" width="18" height="6" rx="2" fill="#5A6B82" transform="rotate(8 41 113)"/>' +
+      '<g class="fx fx-dirt"><circle cx="30" cy="100" r="4" fill="#8B6B4A"/><circle cx="22" cy="108" r="3.5" fill="#A3805C"/></g>' +
+    '</g>' +
+    '<path d="M156 84 q15 3 13 22 l-7 1 q-1 -13 -10 -17 z" fill="#B7821D"/>' },
+
+{ id:'loader', zh:'装载机', en:'Loader', color:'#F6C344',
+  desc:'装载机用大铲子把沙土铲起来，装到卡车上！',
+  act:{ sfx:'dig', line:'铲起来，装上车咯！' },
+  body:
+    W(80,102,19,'#DBA424') + W(148,102,19,'#DBA424') +
+    '<path d="M60 84 q-4 -12 8 -14 l30 0 v30 h-34 z" fill="#F6C344"/>' +
+    '<rect x="116" y="56" width="50" height="46" rx="8" fill="#F6C344"/>' +
+    '<rect x="116" y="92" width="50" height="10" rx="4" fill="#DBA424"/>' +
+    '<path d="M152 64 h8 M152 71 h8 M152 78 h8" stroke="#B7821D" stroke-width="3"/>' +
+    EXH(156,56,14) +
+    '<circle cx="110" cy="86" r="6" fill="#B7821D"/>' +
+    '<rect x="88" y="34" width="42" height="40" rx="7" fill="#E8A33D"/>' +
+    '<rect x="88" y="34" width="42" height="7" rx="3.5" fill="#FFD27A"/>' +
+    GLASS(94,40,30,26) +
+    '<path d="M62 82 a20 20 0 0 1 36 0" fill="none" stroke="#DBA424" stroke-width="6"/>' +
+    '<path d="M130 82 a20 20 0 0 1 36 0" fill="none" stroke="#DBA424" stroke-width="6"/>' +
+    '<g class="part-scoop" style="transform-origin:88px 88px">' +
+      '<path d="M88 76 L40 86 L40 96 L88 88 Z" fill="#D69E2E"/>' +
+      HYD(92,60,56,82) +
+      '<path d="M46 70 L22 70 Q8 88 22 106 L48 104 Q40 86 46 70 Z" fill="#7B8794"/>' +
+      '<path d="M22 102 l5 -6 5 6 5 -6 5 6" stroke="#5A6B82" stroke-width="3" fill="none"/>' +
+      '<g class="fx fx-dirt"><circle cx="30" cy="84" r="4.5" fill="#8B6B4A"/><circle cx="38" cy="80" r="3.5" fill="#A3805C"/><circle cx="26" cy="92" r="3" fill="#8B6B4A"/></g>' +
+    '</g>' },
+
+{ id:'crane', zh:'吊车', en:'Crane', color:'#ED8936',
+  desc:'吊车的长胳膊可以把重重的东西吊到高高的地方！',
+  act:{ sfx:'beep', line:'吊钩降下来，把重物吊起来咯！' },
+  body:
+    '<rect x="24" y="92" width="154" height="13" rx="4" fill="#39434F"/>' +
+    '<line x1="32" y1="104" x2="22" y2="118" stroke="#39434F" stroke-width="6" stroke-linecap="round"/>' +
+    '<rect x="14" y="116" width="16" height="5" rx="2.5" fill="#5A6B82"/>' +
+    '<line x1="168" y1="104" x2="178" y2="118" stroke="#39434F" stroke-width="6" stroke-linecap="round"/>' +
+    '<rect x="170" y="116" width="16" height="5" rx="2.5" fill="#5A6B82"/>' +
+    '<rect x="26" y="80" width="112" height="13" rx="4" fill="#F0A050"/>' +
+    '<rect x="64" y="72" width="30" height="10" rx="3" fill="#DD7726"/>' +
+    '<path d="M176 92 v-25 q0 -10 -10 -10 h-23 v35 z" fill="#ED8936"/>' +
+    GLASS(149,61,17,15) +
+    '<rect x="171" y="74" width="5" height="12" rx="2" fill="#C05621"/>' +
+    '<rect x="166" y="98" width="14" height="6" rx="3" fill="#C8D2DE"/>' +
+    '<path d="M60 88 L130 40 L140 50 L70 98 Z" fill="#DD7726"/>' +
+    '<path d="M68 88 L128 47" stroke="#B35A14" stroke-width="3.5" stroke-linecap="round"/>' +
+    '<path d="M116 50 L158 21 L166 31 L126 60 Z" fill="#F0A050"/>' +
+    HYD(86,84,116,56) +
+    '<circle cx="162" cy="26" r="5.5" fill="#5A6B82"/><circle cx="162" cy="26" r="2.2" fill="#39434F"/>' +
+    '<g class="part-hook">' +
+      '<line x1="162" y1="28" x2="162" y2="56" stroke="#2D3748" stroke-width="2.5"/>' +
+      '<rect x="155" y="56" width="14" height="10" rx="2" fill="#39434F"/>' +
+      '<path d="M162 66 q-10 4 -5 12 q4 7 11 2" fill="none" stroke="#5A6B82" stroke-width="5" stroke-linecap="round"/>' +
+    '</g>' +
+    W(50,108,13,'#ED8936') + W(86,108,13,'#ED8936') + W(150,108,13,'#ED8936') },
+
+{ id:'towercrane', zh:'塔吊', en:'Tower Crane', color:'#ED8936',
+  desc:'塔吊站得高高的，帮忙盖大楼，吊起好多材料！',
+  act:{ sfx:'beep', line:'小车跑一跑，把材料吊上楼顶！' },
+  body:
+    '<rect x="80" y="114" width="40" height="9" rx="3" fill="#39434F"/>' +
+    '<rect x="90" y="30" width="5" height="86" fill="#ED8936"/>' +
+    '<rect x="105" y="30" width="5" height="86" fill="#ED8936"/>' +
+    '<path d="M92 46 l16 14 m-16 0 l16 -14 M92 66 l16 14 m-16 0 l16 -14 M92 86 l16 14 m-16 0 l16 -14 M92 106 l16 8 m-16 0 l16 -8" stroke="#FBD38D" stroke-width="2.4"/>' +
+    '<rect x="30" y="16" width="152" height="5" rx="2.5" fill="#ED8936"/>' +
+    '<rect x="30" y="25" width="152" height="4" rx="2" fill="#ED8936"/>' +
+    '<path d="M40 21 l12 8 m0 -8 l-12 8 M64 21 l12 8 m0 -8 l-12 8 M124 21 l12 8 m0 -8 l-12 8 M148 21 l12 8 m0 -8 l-12 8" stroke="#DD7726" stroke-width="2"/>' +
+    '<path d="M100 3 L60 17 M100 3 L150 16 M100 3 L100 16" stroke="#5A6B82" stroke-width="2.5"/>' +
+    '<rect x="34" y="29" width="22" height="13" fill="#7B8794"/>' +
+    '<rect x="36" y="42" width="18" height="9" fill="#5A6B82"/>' +
+    '<rect x="84" y="16" width="20" height="13" rx="3" fill="#DD7726"/>' +
+    '<rect x="104" y="18" width="17" height="15" rx="3" fill="#F0A050"/>' +
+    GLASS(107,21,10,9,2) +
+    '<g class="part-trolley">' +
+      '<rect x="146" y="28" width="15" height="7" rx="2" fill="#39434F"/>' +
+      '<line x1="153" y1="35" x2="153" y2="64" stroke="#2D3748" stroke-width="2.4"/>' +
+      '<rect x="147" y="64" width="12" height="8" rx="2" fill="#39434F"/>' +
+      '<path d="M153 72 q-9 4 -4 11 q4 6 10 1" fill="none" stroke="#5A6B82" stroke-width="4.5" stroke-linecap="round"/>' +
+    '</g>' },
+
+{ id:'dumptruck', zh:'翻斗车', en:'Dump Truck', color:'#4FA3F7',
+  desc:'翻斗车的车斗会翘起来，哗啦，把土倒出来啦！',
+  act:{ sfx:'pour', line:'车斗翘起来，哗啦，土倒出来啦！' },
+  body:
+    '<rect x="24" y="94" width="154" height="10" rx="3" fill="#39434F"/>' +
+    '<g class="part-bed" style="transform-origin:170px 94px">' +
+      '<path d="M60 50 L174 50 L169 92 L66 92 Z" fill="#98A6B8"/>' +
+      '<path d="M60 50 h114" stroke="#7B8794" stroke-width="7" stroke-linecap="round"/>' +
+      '<path d="M88 56 l-3 30 M116 56 l-2 30 M144 56 l-2 30" stroke="#7B8794" stroke-width="3.5"/>' +
+      '<rect x="58" y="42" width="18" height="10" rx="2" fill="#7B8794"/>' +
+      HYD(98,92,140,62) +
+      '<g class="fx fx-dirt"><circle cx="180" cy="76" r="4.5" fill="#8B6B4A"/><circle cx="188" cy="88" r="3.5" fill="#A3805C"/><circle cx="182" cy="98" r="3" fill="#8B6B4A"/></g>' +
+    '</g>' +
+    '<path d="M28 94 V66 q0 -10 10 -10 h24 v38 z" fill="#4FA3F7"/>' +
+    '<rect x="28" y="56" width="34" height="7" rx="3.5" fill="#7DBCF9"/>' +
+    GLASS(33,63,20,15) +
+    '<rect x="28" y="84" width="34" height="5" rx="2" fill="#2F7FD4"/>' +
+    '<rect x="25" y="88" width="40" height="7" rx="3" fill="#C8D2DE"/>' +
+    '<circle cx="29" cy="84" r="2.6" fill="#FFE08A"/>' +
+    '<line x1="62" y1="60" x2="68" y2="56" stroke="#39434F" stroke-width="2.5"/><rect x="66" y="52" width="6" height="6" rx="1" fill="#39434F"/>' +
+    W(52,106,14,'#4FA3F7') + W(126,106,14,'#4FA3F7') + W(158,106,14,'#4FA3F7') },
+
+{ id:'mixer', zh:'搅拌车', en:'Concrete Mixer', color:'#4FA3F7',
+  desc:'搅拌车的大罐子会转呀转，把水泥搅拌得均匀！',
+  act:{ sfx:'spin', line:'大罐子转呀转，水泥拌好啦！' },
+  body:
+    '<rect x="24" y="94" width="154" height="10" rx="3" fill="#39434F"/>' +
+    '<path d="M176 94 v-25 q0 -10 -10 -10 h-23 v35 z" fill="#4FA3F7"/>' +
+    '<rect x="143" y="52" width="33" height="7" rx="3.5" fill="#7DBCF9"/>' +
+    GLASS(148,62,18,14) +
+    '<rect x="142" y="86" width="36" height="6" rx="3" fill="#C8D2DE"/>' +
+    '<path d="M56 92 L70 54 L84 92 Z" fill="#7B8794"/>' +
+    '<rect x="116" y="58" width="11" height="34" fill="#7B8794"/>' +
+    '<g class="part-drum" style="transform-origin:92px 60px">' +
+      '<ellipse cx="92" cy="60" rx="45" ry="26" fill="#EDF2F7" transform="rotate(-10 92 60)"/>' +
+      '<path d="M56 72 Q68 52 90 46" stroke="#4FA3F7" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+      '<path d="M74 82 Q88 60 110 52" stroke="#4FA3F7" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+      '<path d="M96 84 Q110 66 128 58" stroke="#4FA3F7" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="131" cy="50" rx="7" ry="11" fill="#C8D2DE" transform="rotate(-10 131 50)"/>' +
+    '</g>' +
+    '<path d="M132 54 L150 70" stroke="#7B8794" stroke-width="6" stroke-linecap="round"/>' +
+    '<rect x="128" y="76" width="18" height="11" rx="5.5" fill="#C8D2DE"/>' +
+    W(50,106,14,'#4FA3F7') + W(112,106,13,'#4FA3F7') + W(146,106,13,'#4FA3F7') },
+
+{ id:'roller', zh:'压路机', en:'Road Roller', color:'#48BB78',
+  desc:'压路机有大大的铁滚筒，把马路压得平平整整！',
+  act:{ sfx:'putt', line:'滚筒轰隆隆，马路压平啦！' },
+  body:
+    '<rect x="26" y="64" width="54" height="11" rx="4" fill="#2F855A"/>' +
+    '<rect x="26" y="64" width="7" height="34" rx="3" fill="#2F855A"/>' +
+    '<rect x="73" y="64" width="7" height="34" rx="3" fill="#2F855A"/>' +
+    '<g class="wheel" style="transform-origin:53px 96px">' +
+      '<circle cx="53" cy="96" r="28" fill="#98A6B8"/>' +
+      '<circle cx="53" cy="96" r="23" fill="#AEB9C6"/>' +
+      '<line x1="53" y1="74" x2="53" y2="118" stroke="#7B8794" stroke-width="3.5"/>' +
+      '<line x1="31" y1="96" x2="75" y2="96" stroke="#7B8794" stroke-width="3.5"/>' +
+      '<circle cx="53" cy="96" r="7" fill="#E8EDF3"/>' +
+    '</g>' +
+    '<circle cx="86" cy="84" r="6" fill="#2F855A"/>' +
+    '<rect x="80" y="70" width="84" height="32" rx="8" fill="#48BB78"/>' +
+    '<rect x="80" y="93" width="84" height="9" rx="4" fill="#38A169"/>' +
+    '<path d="M148 76 h10 M148 83 h10" stroke="#2F855A" stroke-width="3"/>' +
+    EXH(148,70,14) +
+    '<rect x="94" y="36" width="46" height="42" rx="7" fill="#38A169"/>' +
+    '<rect x="94" y="36" width="46" height="7" rx="3.5" fill="#7ED6A5"/>' +
+    GLASS(100,44,28,24) +
+    BEACON(117,33) +
+    W(148,100,19,'#38A169') },
+
+{ id:'forklift', zh:'叉车', en:'Forklift', color:'#ED8936',
+  desc:'叉车有两个铁叉子，可以叉起重重的货物！',
+  act:{ sfx:'beep', line:'叉子升起来，货物搬好啦！' },
+  body:
+    '<rect x="52" y="28" width="5" height="84" fill="#39434F"/>' +
+    '<rect x="62" y="28" width="5" height="84" fill="#39434F"/>' +
+    '<path d="M52 36 h15 M52 60 h15 M52 84 h15" stroke="#5A6B82" stroke-width="3"/>' +
+    '<g class="part-fork">' +
+      '<rect x="46" y="78" width="22" height="13" rx="2" fill="#2D3748"/>' +
+      '<rect x="14" y="91" width="40" height="5" rx="2" fill="#2D3748"/>' +
+      '<rect x="14" y="84" width="34" height="7" rx="1.5" fill="#B98A5A"/>' +
+      '<path d="M18 84 v7 M26 84 v7 M34 84 v7 M42 84 v7" stroke="#96714a" stroke-width="2"/>' +
+      '<rect x="15" y="54" width="32" height="30" rx="2.5" fill="#C08552"/>' +
+      '<rect x="28" y="54" width="6" height="30" fill="#E8C9A0"/>' +
+      '<rect x="19" y="60" width="10" height="8" rx="1" fill="#FFF7EA"/>' +
+    '</g>' +
+    '<rect x="70" y="74" width="76" height="32" rx="9" fill="#ED8936"/>' +
+    '<rect x="70" y="96" width="76" height="10" rx="4" fill="#DD7726"/>' +
+    '<path d="M132 66 q22 2 20 30 l-8 6 q0 -22 -16 -28 z" fill="#DD7726"/>' +
+    '<path d="M84 74 V42 M128 74 V42" stroke="#39434F" stroke-width="5.5"/>' +
+    '<rect x="76" y="36" width="60" height="8" rx="4" fill="#39434F"/>' +
+    '<rect x="102" y="60" width="18" height="10" rx="3" fill="#2D3748"/>' +
+    '<line x1="96" y1="68" x2="90" y2="56" stroke="#39434F" stroke-width="3.5"/>' +
+    '<circle cx="89" cy="55" r="4" fill="#5A6B82"/>' +
+    BEACON(106,33) +
+    W(88,108,15,'#DD7726') + W(140,108,11,'#DD7726') },
+
+{ id:'pumptruck', zh:'泵车', en:'Pump Truck', color:'#F56565',
+  desc:'泵车有长长的管子手臂，把水泥送到高高的楼上！',
+  act:{ sfx:'pour', line:'长臂伸出去，水泥送上楼咯！' },
+  body:
+    '<rect x="22" y="92" width="156" height="11" rx="3" fill="#39434F"/>' +
+    '<path d="M178 92 v-24 q0 -10 -10 -10 h-22 v34 z" fill="#F56565"/>' +
+    '<rect x="146" y="51" width="32" height="7" rx="3.5" fill="#FC8181"/>' +
+    GLASS(151,61,17,14) +
+    '<rect x="144" y="85" width="36" height="6" rx="3" fill="#C8D2DE"/>' +
+    '<rect x="26" y="80" width="118" height="12" rx="4" fill="#FC8181"/>' +
+    '<line x1="36" y1="102" x2="28" y2="118" stroke="#39434F" stroke-width="6" stroke-linecap="round"/>' +
+    '<rect x="20" y="116" width="16" height="5" rx="2.5" fill="#5A6B82"/>' +
+    '<rect x="26" y="64" width="20" height="17" rx="3" fill="#C8D2DE"/>' +
+    '<g class="part-sway" style="transform-origin:64px 80px">' +
+      '<path d="M58 86 L118 42 L126 51 L66 94 Z" fill="#E53E3E"/>' +
+      HYD(74,72,102,56) +
+      '<path d="M118 42 L56 20 L53 30 L114 51 Z" fill="#F56565"/>' +
+      '<path d="M56 20 L28 28 L30 37 L58 30 Z" fill="#FC8181"/>' +
+      '<path d="M30 32 q-7 8 -3 17" stroke="#39434F" stroke-width="4.5" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="120" cy="46" r="5" fill="#9B2C2C"/><circle cx="56" cy="25" r="4.5" fill="#9B2C2C"/>' +
+      '<g class="fx fx-pour"><circle cx="27" cy="56" r="3" fill="#98A6B8"/><circle cx="29" cy="64" r="2.5" fill="#AEB9C6"/></g>' +
+    '</g>' +
+    W(46,106,13,'#F56565') + W(92,106,13,'#F56565') + W(150,106,13,'#F56565') },
+
+{ id:'grader', zh:'平地机', en:'Grader', color:'#F6C344',
+  desc:'平地机肚子下面有一把长刀，把地刮得平平的！',
+  act:{ sfx:'dig', line:'长刀刮一刮，地面平平的！' },
+  body:
+    '<rect x="34" y="70" width="80" height="11" rx="5" fill="#F6C344"/>' +
+    '<rect x="30" y="70" width="13" height="26" rx="5" fill="#E8A33D"/>' +
+    '<circle cx="36" cy="74" r="2.6" fill="#FFE08A"/>' +
+    '<circle cx="84" cy="84" r="8" fill="#B7821D"/><circle cx="84" cy="84" r="3.5" fill="#7A5A10"/>' +
+    '<g class="part-blade">' +
+      '<path d="M62 88 l38 10 v12 l-38 -10 z" fill="#8D9AAB"/>' +
+      '<path d="M62 100 l38 10" stroke="#5A6B82" stroke-width="4"/>' +
+      HYD(84,74,92,94) +
+    '</g>' +
+    '<rect x="110" y="56" width="62" height="46" rx="8" fill="#F6C344"/>' +
+    '<rect x="110" y="92" width="62" height="10" rx="4" fill="#DBA424"/>' +
+    '<path d="M156 64 h10 M156 71 h10 M156 78 h10" stroke="#B7821D" stroke-width="3"/>' +
+    EXH(150,46,16) +
+    '<rect x="110" y="34" width="38" height="34" rx="6" fill="#E8A33D"/>' +
+    '<rect x="110" y="34" width="38" height="6" rx="3" fill="#FFD27A"/>' +
+    GLASS(115,40,24,20) +
+    W(42,108,14,'#DBA424') + W(126,108,14,'#DBA424') + W(158,108,14,'#DBA424') },
+
+{ id:'miningtruck', zh:'矿用大卡车', en:'Mining Truck', color:'#F6C344',
+  desc:'矿用大卡车是超级大力士，轮子比爸爸还高，能拉好多好多矿石！',
+  act:{ sfx:'pour', line:'大力士出发，矿石运走啦！' },
+  body:
+    '<g class="part-bed" style="transform-origin:176px 84px">' +
+      '<path d="M22 30 L188 30 L174 82 L46 82 Z" fill="#F6C344"/>' +
+      '<path d="M22 30 h42 l-5 13 h-39 z" fill="#E8A33D"/>' +
+      '<path d="M84 36 l-4 40 M124 36 l-3 40 M158 36 l-4 40" stroke="#D69E2E" stroke-width="4"/>' +
+      '<circle cx="92" cy="27" r="7" fill="#8D9AAB"/><circle cx="112" cy="25" r="9" fill="#98A6B8"/><circle cx="134" cy="27" r="7" fill="#8D9AAB"/><circle cx="152" cy="28" r="5" fill="#AEB9C6"/>' +
+      '<g class="fx fx-rock"><circle cx="186" cy="60" r="5" fill="#8D9AAB"/><circle cx="192" cy="74" r="4" fill="#98A6B8"/></g>' +
+    '</g>' +
+    '<rect x="42" y="82" width="134" height="14" rx="4" fill="#DBA424"/>' +
+    '<rect x="26" y="44" width="32" height="26" rx="5" fill="#FFE08A"/>' +
+    GLASS(30,48,18,13,3) +
+    '<path d="M26 70 v28 M34 70 v28 M26 77 h8 M26 84 h8 M26 91 h8" stroke="#5A6B82" stroke-width="3"/>' +
+    '<path d="M44 98 a26 26 0 0 1 52 0" fill="none" stroke="#B7821D" stroke-width="7"/>' +
+    '<path d="M120 98 a26 26 0 0 1 52 0" fill="none" stroke="#B7821D" stroke-width="7"/>' +
+    W(70,98,26,'#DBA424') + W(146,98,26,'#DBA424') },
+
+{ id:'firetruck', zh:'消防车', en:'Fire Truck', color:'#E53E3E',
+  desc:'着火了别怕！消防车呜哇呜哇赶来灭火！',
+  act:{ sfx:'siren', line:'云梯升起来，呜哇呜哇去灭火！' },
+  body:
+    '<g class="part-ladder" style="transform-origin:152px 50px">' +
+      '<rect x="36" y="44" width="74" height="3.5" rx="1.75" fill="#AEB9C6"/>' +
+      '<rect x="36" y="52" width="74" height="3.5" rx="1.75" fill="#AEB9C6"/>' +
+      '<path d="M44 44 v12 M58 44 v12 M72 44 v12 M86 44 v12 M100 44 v12" stroke="#8D9AAB" stroke-width="3"/>' +
+      '<rect x="52" y="40" width="104" height="4.5" rx="2.25" fill="#C8D2DE"/>' +
+      '<rect x="52" y="54" width="104" height="4.5" rx="2.25" fill="#C8D2DE"/>' +
+      '<path d="M64 40 v18 M82 40 v18 M100 40 v18 M118 40 v18 M136 40 v18 M150 40 v18" stroke="#98A6B8" stroke-width="3.2"/>' +
+    '</g>' +
+    '<rect x="136" y="56" width="28" height="10" rx="3" fill="#C53030"/>' +
+    '<rect x="22" y="62" width="158" height="44" rx="8" fill="#E53E3E"/>' +
+    GLASS(28,68,22,17) +
+    GLASS(56,68,10,13) +
+    '<rect x="74" y="68" width="26" height="24" rx="3" fill="#C53030"/>' +
+    '<circle cx="82" cy="76" r="3.5" fill="#FFF" /><circle cx="92" cy="76" r="3.5" fill="#FFF"/>' +
+    '<circle cx="82" cy="76" r="1.4" fill="#E53E3E"/><circle cx="92" cy="76" r="1.4" fill="#E53E3E"/>' +
+    '<rect x="78" y="84" width="12" height="5" rx="2" fill="#7B8794"/>' +
+    '<rect x="106" y="68" width="28" height="24" rx="3" fill="#F3D6D6"/>' +
+    '<path d="M106 74 h28 M106 80 h28 M106 86 h28" stroke="#D8AEAE" stroke-width="2"/>' +
+    '<rect x="140" y="68" width="32" height="24" rx="3" fill="#C53030"/>' +
+    '<circle cx="156" cy="80" r="8" fill="#39434F"/><circle cx="156" cy="80" r="3.5" fill="#8D9AAB"/>' +
+    '<rect x="22" y="94" width="158" height="8" fill="#FFFFFF" opacity=".92"/>' +
+    '<g><rect class="light-a" x="28" y="54" width="10" height="7" rx="2" fill="#FF5D5D"/>' +
+    '<rect class="light-b" x="39" y="54" width="10" height="7" rx="2" fill="#4FA3F7"/></g>' +
+    '<rect x="19" y="98" width="26" height="7" rx="3" fill="#C8D2DE"/>' +
+    W(54,106,14,'#C53030') + W(110,106,14,'#C53030') + W(150,106,14,'#C53030') },
+
+{ id:'policecar', zh:'警车', en:'Police Car', color:'#2B6CB0',
+  desc:'警车闪着蓝红灯，保护大家的安全！',
+  act:{ sfx:'siren', line:'警灯闪闪，呜哇呜哇出发啦！' },
+  body:
+    '<path d="M24 102 v-12 q0 -9 11 -11 l17 -3 9 -15 q4 -6 12 -6 h22 q8 0 13 6 l10 15 21 4 q11 2 11 11 v11 z" fill="#F7FAFC"/>' +
+    '<path d="M64 73 l8 -13 q3 -4 8 -4 h11 v17 z" fill="#8FD0F5" stroke="#fff" stroke-width="2.5"/>' +
+    '<path d="M95 56 h9 q5 0 8 4 l8 13 h-25 z" fill="#8FD0F5" stroke="#fff" stroke-width="2.5"/>' +
+    '<rect x="24" y="86" width="146" height="11" fill="#2B6CB0"/>' +
+    '<circle cx="97" cy="91.5" r="7.5" fill="#fff"/>' +
+    '<path d="m97 86.5 1.6 3.2 3.5.5-2.5 2.5.6 3.5-3.2-1.7-3.2 1.7.6-3.5-2.5-2.5 3.5-.5z" fill="#F6AD37"/>' +
+    '<g><rect class="light-a" x="84" y="49" width="11" height="7" rx="2" fill="#FF5D5D"/>' +
+    '<rect class="light-b" x="96" y="49" width="11" height="7" rx="2" fill="#4FA3F7"/></g>' +
+    '<path d="M42 102 a16 16 0 0 1 32 0 z" fill="#14202E"/>' +
+    '<path d="M126 102 a16 16 0 0 1 32 0 z" fill="#14202E"/>' +
+    '<rect x="166" y="80" width="8" height="5" rx="2" fill="#FFE08A"/>' +
+    '<rect x="24" y="80" width="6" height="5" rx="2" fill="#FF8A8A"/>' +
+    '<line x1="62" y1="78" x2="56" y2="74" stroke="#39434F" stroke-width="2.5"/><rect x="52" y="70" width="6" height="5" rx="1" fill="#39434F"/>' +
+    W(58,104,13,'#C8D2DE') + W(142,104,13,'#C8D2DE') },
+
+{ id:'ambulance', zh:'救护车', en:'Ambulance', color:'#E53E3E',
+  desc:'有人生病了，救护车快快送他去医院！',
+  act:{ sfx:'siren', line:'救护车呜哇呜哇，快快去医院！' },
+  body:
+    '<rect x="58" y="44" width="120" height="62" rx="9" fill="#F7FAFC"/>' +
+    '<rect x="58" y="44" width="120" height="9" rx="4.5" fill="#E8EDF3"/>' +
+    '<path d="M26 106 V80 q0 -10 10 -10 h24 v36 z" fill="#EDF2F7"/>' +
+    '<path d="M30 70 q14 -10 28 0" fill="none" stroke="#E8EDF3" stroke-width="5"/>' +
+    GLASS(33,74,19,15) +
+    '<rect x="26" y="94" width="152" height="10" fill="#E53E3E"/>' +
+    '<circle cx="112" cy="71" r="16" fill="#fff" stroke="#F0D9D9" stroke-width="2"/>' +
+    '<rect x="107.5" y="59" width="9" height="24" rx="2" fill="#E53E3E"/>' +
+    '<rect x="100" y="66.5" width="24" height="9" rx="2" fill="#E53E3E"/>' +
+    '<line x1="156" y1="50" x2="156" y2="92" stroke="#D8DEE6" stroke-width="2.5"/>' +
+    '<rect x="148" y="68" width="5" height="10" rx="2" fill="#AEB9C6"/><rect x="160" y="68" width="5" height="10" rx="2" fill="#AEB9C6"/>' +
+    '<g><rect class="light-a" x="62" y="36" width="12" height="8" rx="2" fill="#FF5D5D"/>' +
+    '<rect class="light-b" x="76" y="36" width="12" height="8" rx="2" fill="#4FA3F7"/></g>' +
+    '<circle cx="29" cy="86" r="2.6" fill="#FFE08A"/>' +
+    W(54,108,14,'#C8D2DE') + W(146,108,14,'#C8D2DE') },
+
+{ id:'bus', zh:'公交车', en:'Bus', color:'#4FA3F7',
+  desc:'公交车好长呀，能带好多人一起出门！',
+  act:{ sfx:'ding', line:'车门打开啦，请上车！' },
+  body:
+    '<rect x="22" y="44" width="156" height="64" rx="12" fill="#4FA3F7"/>' +
+    '<rect x="22" y="44" width="156" height="10" rx="5" fill="#7DBCF9"/>' +
+    GLASS(32,58,24,20) + GLASS(62,58,24,20) + GLASS(92,58,24,20) +
+    '<circle cx="44" cy="73" r="5" fill="#FFE08A"/><circle cx="74" cy="73" r="5" fill="#FFD2A8"/>' +
+    '<g class="part-door"><rect x="122" y="60" width="22" height="48" rx="3" fill="#8FD0F5" stroke="#fff" stroke-width="2.5"/>' +
+    '<line x1="133" y1="60" x2="133" y2="108" stroke="#fff" stroke-width="2.5"/></g>' +
+    GLASS(150,58,21,22) +
+    '<rect x="148" y="36" width="24" height="9" rx="3" fill="#FFD23E"/>' +
+    '<rect x="22" y="92" width="156" height="7" fill="#FFD23E"/>' +
+    '<line x1="176" y1="64" x2="182" y2="60" stroke="#39434F" stroke-width="2.5"/><rect x="180" y="56" width="6" height="6" rx="1" fill="#39434F"/>' +
+    '<circle cx="175" cy="86" r="2.6" fill="#FFE08A"/>' +
+    W(56,108,13,'#2F7FD4') + W(120,108,13,'#2F7FD4') },
+
+{ id:'garbagetruck', zh:'垃圾车', en:'Garbage Truck', color:'#48BB78',
+  desc:'垃圾车把垃圾吃进肚子，让街道干干净净！',
+  act:{ sfx:'beep', line:'盖子打开，垃圾吃进肚子里！' },
+  body:
+    '<rect x="24" y="94" width="152" height="10" rx="3" fill="#39434F"/>' +
+    '<g class="part-lid" style="transform-origin:158px 60px">' +
+      '<path d="M156 54 h14 q10 0 10 12 v24 h-24 z" fill="#2F855A"/>' +
+      '<path d="M162 60 v24" stroke="#256B47" stroke-width="3"/>' +
+    '</g>' +
+    '<rect x="178" y="82" width="13" height="17" rx="3" fill="#38A169" transform="rotate(-16 184 90)"/>' +
+    '<path d="M62 54 h92 q12 0 12 14 v36 h-104 z" fill="#48BB78"/>' +
+    '<path d="M62 54 q-6 22 0 50" fill="#38A169"/>' +
+    '<path d="M86 60 v38 M108 60 v38 M130 60 v38" stroke="#38A169" stroke-width="4"/>' +
+    '<circle cx="98" cy="78" r="13" fill="#fff"/>' +
+    '<path d="M98 69 l9 16 h-18 z" fill="#48BB78"/>' +
+    '<path d="M26 94 V72 q0 -10 10 -10 h24 v32 z" fill="#48BB78"/>' +
+    '<rect x="26" y="62" width="34" height="7" rx="3.5" fill="#7ED6A5"/>' +
+    GLASS(31,69,19,14) +
+    '<rect x="23" y="88" width="40" height="7" rx="3" fill="#C8D2DE"/>' +
+    W(50,106,13,'#2F855A') + W(116,106,13,'#2F855A') + W(148,106,13,'#2F855A') },
+
+{ id:'watertruck', zh:'洒水车', en:'Water Truck', color:'#4FA3F7',
+  desc:'洒水车一边唱歌一边洒水，给马路洗澡澡！',
+  act:{ sfx:'splash', line:'哗啦啦，洒水车给马路洗澡澡！' },
+  body:
+    '<rect x="24" y="94" width="152" height="10" rx="3" fill="#39434F"/>' +
+    '<path d="M26 94 V72 q0 -10 10 -10 h24 v32 z" fill="#4FA3F7"/>' +
+    '<rect x="26" y="62" width="34" height="7" rx="3.5" fill="#7DBCF9"/>' +
+    GLASS(31,69,19,14) +
+    '<rect x="23" y="88" width="40" height="7" rx="3" fill="#C8D2DE"/>' +
+    '<rect x="64" y="54" width="110" height="48" rx="24" fill="#63B3ED"/>' +
+    '<ellipse cx="74" cy="78" rx="9" ry="22" fill="#7DBCF9"/>' +
+    '<path d="M96 54 v48 M122 54 v48 M148 54 v48" stroke="#4FA3F7" stroke-width="5"/>' +
+    '<rect x="108" y="48" width="16" height="9" rx="3" fill="#4FA3F7"/>' +
+    '<ellipse cx="100" cy="66" rx="16" ry="6" fill="#fff" opacity=".5"/>' +
+    '<rect x="170" y="96" width="10" height="5" rx="2" fill="#39434F"/>' +
+    '<g class="part-water">' +
+      '<path d="M176 102 q8 7 7 17" stroke="#4FA3F7" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+      '<path d="M180 98 q12 9 12 22" stroke="#4FA3F7" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="188" cy="110" r="3" fill="#4FA3F7"/><circle cx="180" cy="119" r="2.5" fill="#4FA3F7"/>' +
+      '<circle cx="190" cy="88" r="3" fill="#2B6CB0"/><line x1="193" y1="88" x2="193" y2="78" stroke="#2B6CB0" stroke-width="2.5"/><path d="M193 78 q5 1 5 5" stroke="#2B6CB0" stroke-width="2.5" fill="none"/>' +
+    '</g>' +
+    W(50,106,13,'#2F7FD4') + W(118,106,13,'#2F7FD4') + W(150,106,13,'#2F7FD4') },
+
+{ id:'schoolbus', zh:'校车', en:'School Bus', color:'#F6AD37',
+  desc:'黄色的校车，接小朋友们上学去！',
+  act:{ sfx:'ding', line:'停车牌伸出来，小朋友们上车啦！' },
+  body:
+    '<rect x="146" y="72" width="34" height="36" rx="7" fill="#F6AD37"/>' +
+    '<rect x="172" y="78" width="8" height="22" rx="3" fill="#E89420"/>' +
+    '<circle cx="176" cy="86" r="2.6" fill="#FFE08A"/>' +
+    '<rect x="20" y="46" width="132" height="62" rx="10" fill="#F6AD37"/>' +
+    '<rect x="20" y="46" width="132" height="9" rx="4.5" fill="#FFC85C"/>' +
+    GLASS(30,56,21,18) + GLASS(57,56,21,18) + GLASS(84,56,21,18) +
+    '<circle cx="40" cy="69" r="4.5" fill="#FFD2A8"/><circle cx="94" cy="69" r="4.5" fill="#FFE08A"/>' +
+    '<g class="part-door"><rect x="112" y="58" width="20" height="50" rx="3" fill="#8FD0F5" stroke="#fff" stroke-width="2.5"/>' +
+    '<line x1="122" y1="58" x2="122" y2="108" stroke="#fff" stroke-width="2.5"/></g>' +
+    '<rect x="20" y="84" width="160" height="8" fill="#2D3748"/>' +
+    '<path d="M20 86.5 h160 M20 89.5 h160" stroke="#F6AD37" stroke-width="1" opacity=".5"/>' +
+    '<g class="part-sign" style="transform-origin:18px 64px">' +
+      '<line x1="18" y1="60" x2="18" y2="76" stroke="#39434F" stroke-width="3"/>' +
+      '<polygon points="8,62 14,58 22,58 28,62 28,70 22,74 14,74 8,70" fill="#E53E3E" stroke="#fff" stroke-width="2"/>' +
+    '</g>' +
+    '<circle class="light-a" cx="32" cy="42" r="4.5" fill="#FF5D5D"/>' +
+    '<circle class="light-b" cx="140" cy="42" r="4.5" fill="#FF5D5D"/>' +
+    '<rect x="16" y="100" width="20" height="7" rx="3" fill="#39434F"/>' +
+    W(52,108,14,'#2D3748') + W(126,108,14,'#2D3748') },
+
+{ id:'tractor', zh:'拖拉机', en:'Tractor', color:'#E53E3E',
+  desc:'拖拉机突突突，在田地里帮农民伯伯干活！',
+  act:{ sfx:'putt', line:'突突突突，拖拉机干活啦！' },
+  body:
+    '<g class="part-smoke">' +
+      '<circle cx="64" cy="38" r="5" fill="#CBD5E0"/>' +
+      '<circle cx="68" cy="28" r="7" fill="#E2E8F0"/>' +
+    '</g>' +
+    '<rect x="58" y="44" width="7" height="30" rx="2.5" fill="#39434F"/>' +
+    '<rect x="70" y="52" width="5" height="22" rx="2" fill="#5A6B82"/>' +
+    '<path d="M30 80 q0 -10 10 -10 h58 v32 h-68 z" fill="#E53E3E"/>' +
+    '<path d="M32 72 q30 -6 64 -2 l2 6 h-66 z" fill="#F56565"/>' +
+    '<rect x="30" y="76" width="10" height="22" rx="3" fill="#8D9AAB"/>' +
+    '<path d="M33 80 v14 M36.5 80 v14" stroke="#5A6B82" stroke-width="1.6"/>' +
+    '<circle cx="33" cy="72" r="3" fill="#FFE08A"/>' +
+    '<path d="M100 96 V50 h34 V90" fill="none" stroke="#C53030" stroke-width="7"/>' +
+    GLASS(104,52,26,34,3) +
+    '<rect x="92" y="42" width="48" height="10" rx="5" fill="#C53030"/>' +
+    BEACON(116,38) +
+    '<path d="M100 62 q36 -20 70 4 l-6 10 q-26 -18 -58 -4 z" fill="#C53030"/>' +
+    '<rect x="170" y="94" width="16" height="6" rx="3" fill="#39434F"/>' +
+    W(140,90,30,'#FFD23E') + W(54,106,17,'#FFD23E') },
+];
+
+/* ================= 玩一玩：12 个场景 ================= */
+const SCENES = [
+{ id:'thief', v:'policecar',
+  q:'不好啦！马路上有个坏人在捣乱！快，开哪辆车去抓住他？',
+  win:'呜哇呜哇！警察叔叔把坏人抓住啦！图图立大功！',
+  exclude:[],
+  art:
+    '<rect x="40" y="60" width="56" height="100" rx="4" fill="#BFD9F2"/><rect x="120" y="40" width="48" height="120" rx="4" fill="#A8CBEC"/>' +
+    '<path d="M52 76 h12 M52 96 h12 M76 76 h12 M76 96 h12 M132 60 h10 M132 80 h10 M150 60 h10 M150 80 h10" stroke="#fff" stroke-width="5"/>' +
+    '<g class="prop">' +
+      '<circle cx="312" cy="118" r="13" fill="#F4C99B"/>' +
+      '<path d="M299 114 a13 13 0 0 1 26 0 z" fill="#2D3748"/>' +
+      '<rect x="304" y="116" width="16" height="4" rx="2" fill="#2D3748"/>' +
+      '<circle cx="307" cy="119" r="2" fill="#fff"/><circle cx="317" cy="119" r="2" fill="#fff"/>' +
+      '<rect x="298" y="130" width="28" height="34" rx="9" fill="#39434F"/>' +
+      '<line x1="296" y1="168" x2="288" y2="184" stroke="#39434F" stroke-width="8" stroke-linecap="round"/>' +
+      '<line x1="326" y1="166" x2="336" y2="182" stroke="#39434F" stroke-width="8" stroke-linecap="round"/>' +
+      '<circle cx="340" cy="138" r="13" fill="#8B6B4A"/><path d="M333 130 q7 -6 14 0" stroke="#6e553b" stroke-width="3" fill="none"/>' +
+      '<rect x="282" y="92" width="5" height="14" rx="2.5" fill="#E53E3E"/><circle cx="284.5" cy="112" r="2.8" fill="#E53E3E"/>' +
+      '<rect x="336" y="88" width="5" height="14" rx="2.5" fill="#E53E3E"/><circle cx="338.5" cy="108" r="2.8" fill="#E53E3E"/>' +
+    '</g>' },
+{ id:'fire', v:'firetruck',
+  q:'着火啦！小房子着火啦！快开哪辆车去灭火？',
+  win:'水枪喷水，火扑灭啦！消防员真勇敢！',
+  exclude:['watertruck'],
+  art:
+    '<rect x="270" y="92" width="104" height="76" rx="4" fill="#F4E6CF"/>' +
+    '<path d="M260 92 L322 56 L384 92 Z" fill="#C05621"/>' +
+    '<rect x="288" y="120" width="22" height="22" rx="3" fill="#8FD0F5" stroke="#fff" stroke-width="3"/>' +
+    '<rect x="334" y="120" width="24" height="48" rx="3" fill="#9C6516"/><circle cx="352" cy="144" r="2.5" fill="#FFD23E"/>' +
+    '<g class="prop">' +
+      '<path class="flame" d="M299 120 q-10 -22 0 -34 q2 10 9 12 q-2 -12 6 -20 q1 12 8 18 q5 6 2 14 q-4 12 -25 10z" fill="#FF8A3D"/>' +
+      '<path class="flame" d="M304 118 q-5 -12 1 -20 q4 8 8 9 q0 8 -1 11 z" fill="#FFD23E"/>' +
+      '<circle cx="300" cy="74" r="7" fill="#AEB9C6" opacity=".8"/><circle cx="310" cy="62" r="9" fill="#C4CDD8" opacity=".7"/>' +
+    '</g>' },
+{ id:'sick', v:'ambulance',
+  q:'哎呀，有人生病了，好难受呀！快开哪辆车去帮忙？',
+  win:'呜哇呜哇，快快送到医院，病人得救啦！',
+  exclude:['policecar','firetruck'],
+  art:
+    '<rect x="262" y="140" width="120" height="26" rx="8" fill="#E8EDF3"/>' +
+    '<rect x="268" y="160" width="8" height="20" fill="#AEB9C6"/><rect x="368" y="160" width="8" height="20" fill="#AEB9C6"/>' +
+    '<g class="prop">' +
+      '<circle cx="290" cy="128" r="14" fill="#F4C99B"/>' +
+      '<path d="M283 124 q7 8 14 0" stroke="#9C6516" stroke-width="2.5" fill="none" transform="rotate(180 290 128)"/>' +
+      '<circle cx="285" cy="125" r="2" fill="#39434F"/><circle cx="295" cy="125" r="2" fill="#39434F"/>' +
+      '<rect x="278" y="106" width="24" height="8" rx="4" fill="#fff"/>' +
+      '<path d="M306 132 q42 -14 66 0 v12 h-66 z" fill="#7EC4EF"/>' +
+      '<circle cx="330" cy="96" r="11" fill="#fff"/><rect x="327" y="89" width="6" height="14" rx="1.5" fill="#E53E3E"/><rect x="323" y="93" width="14" height="6" rx="1.5" fill="#E53E3E"/>' +
+    '</g>' },
+{ id:'pit', v:'excavator',
+  q:'工地上要挖一个大大的坑，开哪辆车来帮忙呀？',
+  win:'挖呀挖，大坑挖好啦！真能干！',
+  exclude:['loader','bulldozer'],
+  art:
+    '<g class="prop">' +
+      '<ellipse cx="310" cy="178" rx="62" ry="15" fill="#5B4632"/>' +
+      '<ellipse cx="310" cy="174" rx="62" ry="15" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="10 8"/>' +
+      '<path d="M352 168 q14 -24 34 -9 q6 5 6 9 z" fill="#8B6B4A"/>' +
+      '<rect x="246" y="122" width="6" height="50" fill="#9C6516"/><rect x="232" y="110" width="34" height="22" rx="3" fill="#FFD23E" stroke="#E8A33D" stroke-width="3"/>' +
+      '<path d="M243 116 l7 9 m0 -9 l-7 9" stroke="#9C6516" stroke-width="3.5"/>' +
+    '</g>' },
+{ id:'dirtpile', v:'dumptruck',
+  q:'这里有一大堆土，要把它运走，开哪辆车呢？',
+  win:'装得满满的，土运走啦！',
+  exclude:['excavator','loader','bulldozer','miningtruck'],
+  art:
+    '<g class="prop">' +
+      '<path d="M240 168 q20 -52 56 -40 q20 6 28 24 q26 -10 38 16 z" fill="#8B6B4A"/>' +
+      '<path d="M258 150 q16 -28 42 -22" stroke="#A3805C" stroke-width="5" fill="none"/>' +
+      '<circle cx="262" cy="162" r="5" fill="#6e553b"/><circle cx="332" cy="160" r="6" fill="#6e553b"/><circle cx="300" cy="166" r="4" fill="#6e553b"/>' +
+      '<rect x="352" y="120" width="5" height="30" fill="#9C6516"/><path d="M340 112 h28 l-4 14 h-20 z" fill="#E8A33D"/>' +
+    '</g>' },
+{ id:'bumpy', v:'roller',
+  q:'新修的马路坑坑洼洼的，开哪辆车把它压平呀？',
+  win:'轰隆隆压过去，马路变得平平的！',
+  exclude:['grader','bulldozer'],
+  art:
+    '<g class="prop">' +
+      '<path d="M236 178 q12 -16 24 0 q12 -16 24 0 q12 -16 24 0 q12 -16 24 0 q12 -16 24 0 v14 h-120 z" fill="#6E7B8C"/>' +
+      '<path d="M250 186 q10 -10 20 0 M290 186 q10 -10 20 0 M330 186 q10 -10 20 0" stroke="#5C6878" stroke-width="4" fill="none"/>' +
+      '<path d="M252 146 l13 26 h-26 z" fill="#FF8A3D"/><rect x="256" y="162" width="5" height="9" fill="#fff"/>' +
+      '<path d="M380 142 l13 26 h-26 z" fill="#FF8A3D"/><rect x="384" y="158" width="5" height="9" fill="#fff"/>' +
+    '</g>' },
+{ id:'dusty', v:'watertruck',
+  q:'马路上好多灰尘，脏脏的，开哪辆车来帮忙？',
+  win:'哗啦啦洒洒水，马路干干净净！',
+  exclude:['garbagetruck'],
+  art:
+    '<g class="prop">' +
+      '<g class="dustc"><circle cx="270" cy="140" r="14" fill="#C9C2B8" opacity=".85"/><circle cx="286" cy="132" r="10" fill="#D8D2C8" opacity=".8"/><circle cx="258" cy="132" r="9" fill="#D8D2C8" opacity=".8"/></g>' +
+      '<g class="dustc" style="animation-delay:.8s"><circle cx="330" cy="146" r="16" fill="#C9C2B8" opacity=".85"/><circle cx="348" cy="138" r="11" fill="#D8D2C8" opacity=".8"/><circle cx="316" cy="136" r="10" fill="#D8D2C8" opacity=".8"/></g>' +
+      '<circle cx="296" cy="164" r="4" fill="#A89F92"/><circle cx="312" cy="170" r="3" fill="#A89F92"/><circle cx="276" cy="170" r="3.4" fill="#A89F92"/>' +
+    '</g>' },
+{ id:'trash', v:'garbagetruck',
+  q:'垃圾桶满出来啦，臭臭的，开哪辆车来收垃圾？',
+  win:'垃圾都吃进肚子，街道变干净啦！',
+  exclude:['watertruck'],
+  art:
+    '<g class="prop">' +
+      '<rect x="270" y="120" width="34" height="44" rx="4" fill="#48BB78"/><rect x="266" y="114" width="42" height="9" rx="4" fill="#38A169" transform="rotate(-14 287 118)"/>' +
+      '<rect x="318" y="124" width="32" height="40" rx="4" fill="#4FA3F7"/><rect x="316" y="118" width="36" height="8" rx="4" fill="#2F7FD4"/>' +
+      '<circle cx="282" cy="108" r="9" fill="#39434F"/><circle cx="300" cy="100" r="7" fill="#5A6B82"/><circle cx="334" cy="110" r="8" fill="#39434F"/>' +
+      '<path d="M308 84 q4 -8 0 -14 M318 88 q4 -8 0 -14" stroke="#9aa86e" stroke-width="3" fill="none" opacity=".9"/>' +
+      '<circle cx="358" cy="150" r="6" fill="#39434F"/><circle cx="262" cy="156" r="5" fill="#5A6B82"/>' +
+    '</g>' },
+{ id:'school', v:'schoolbus',
+  q:'叮铃铃，要上学啦，小朋友们在等哪辆车呀？',
+  win:'小朋友们都上车啦，出发去学校咯！',
+  exclude:['bus'],
+  art:
+    '<rect x="252" y="78" width="130" height="90" rx="5" fill="#FBD38D"/>' +
+    '<path d="M244 78 L317 46 L390 78 Z" fill="#E07B1F"/>' +
+    '<circle cx="317" cy="92" r="11" fill="#fff"/><line x1="317" y1="92" x2="317" y2="85" stroke="#39434F" stroke-width="2.5"/><line x1="317" y1="92" x2="322" y2="92" stroke="#39434F" stroke-width="2.5"/>' +
+    '<rect x="270" y="112" width="20" height="20" rx="3" fill="#8FD0F5" stroke="#fff" stroke-width="3"/>' +
+    '<rect x="344" y="112" width="20" height="20" rx="3" fill="#8FD0F5" stroke="#fff" stroke-width="3"/>' +
+    '<rect x="306" y="128" width="22" height="40" rx="3" fill="#9C6516"/>' +
+    '<line x1="388" y1="46" x2="388" y2="78" stroke="#9C6516" stroke-width="4"/><path d="M388 46 h22 v12 h-22 z" fill="#E53E3E"/>' +
+    '<g class="prop">' +
+      '<circle cx="260" cy="146" r="9" fill="#F4C99B"/><rect x="252" y="155" width="16" height="20" rx="6" fill="#4FA3F7"/>' +
+      '<circle cx="234" cy="150" r="8" fill="#F4C99B"/><rect x="227" y="158" width="14" height="18" rx="5" fill="#F687B3"/>' +
+      '<line x1="247" y1="160" x2="247" y2="172" stroke="#F4C99B" stroke-width="4" stroke-linecap="round"/>' +
+    '</g>' },
+{ id:'box', v:'forklift',
+  q:'仓库里的大箱子好重呀，开哪辆车把它搬起来？',
+  win:'叉子一抬，大箱子搬好啦！',
+  exclude:['crane','towercrane','loader'],
+  art:
+    '<rect x="250" y="60" width="8" height="110" fill="#8D9AAB"/><rect x="370" y="60" width="8" height="110" fill="#8D9AAB"/>' +
+    '<rect x="246" y="100" width="136" height="7" rx="3" fill="#98A6B8"/><rect x="246" y="60" width="136" height="7" rx="3" fill="#98A6B8"/>' +
+    '<rect x="300" y="70" width="28" height="28" rx="3" fill="#C08552"/><rect x="311" y="70" width="6" height="28" fill="#E8C9A0"/>' +
+    '<g class="prop">' +
+      '<rect x="282" y="124" width="44" height="44" rx="4" fill="#C08552"/>' +
+      '<rect x="300" y="124" width="8" height="44" fill="#E8C9A0"/>' +
+      '<rect x="288" y="132" width="14" height="11" rx="2" fill="#FFF7EA"/>' +
+      '<path d="M334 134 l10 -8 m-10 16 l14 0 m-14 8 l10 8" stroke="#E07B1F" stroke-width="4" stroke-linecap="round"/>' +
+    '</g>' },
+{ id:'beam', v:'crane',
+  q:'盖大楼要把钢梁吊到楼顶，开哪辆车来帮忙？',
+  win:'钢梁吊上去啦，大楼越盖越高！',
+  exclude:['towercrane','forklift','pumptruck'],
+  art:
+    '<path d="M270 168 V60 h84 v108 M270 96 h84 M270 132 h84 M298 60 v108 M326 60 v108" stroke="#98A6B8" stroke-width="6" fill="none"/>' +
+    '<g class="prop">' +
+      '<rect x="240" y="152" width="92" height="12" rx="3" fill="#5A6B82"/>' +
+      '<path d="M244 158 h84" stroke="#39434F" stroke-width="3"/>' +
+      '<circle cx="286" cy="148" r="5" fill="none" stroke="#39434F" stroke-width="3"/>' +
+    '</g>' },
+{ id:'farm', v:'tractor',
+  q:'田地里要翻土种庄稼，农民伯伯在等谁呀？',
+  win:'突突突，田地翻好啦，等着大丰收！',
+  exclude:[],
+  art:
+    '<path d="M230 168 q40 -14 160 0 v14 h-160 z" fill="#9C6516"/>' +
+    '<path d="M240 166 q60 -10 140 0 M248 158 q55 -8 124 0 M258 150 q45 -7 104 0" stroke="#7A5210" stroke-width="4" fill="none"/>' +
+    '<g class="prop">' +
+      '<path d="M290 172 q4 -12 9 0 z" fill="#48BB78"/><path d="M320 166 q4 -12 9 0 z" fill="#48BB78"/><path d="M350 172 q4 -12 9 0 z" fill="#48BB78"/>' +
+      '<circle cx="252" cy="136" r="10" fill="#F4C99B"/>' +
+      '<path d="M238 134 a14 7 0 0 1 28 0 z" fill="#E8A33D"/><rect x="236" y="132" width="32" height="4" rx="2" fill="#E8A33D"/>' +
+      '<rect x="244" y="146" width="16" height="24" rx="5" fill="#4FA3F7"/>' +
+      '<line x1="262" y1="150" x2="272" y2="138" stroke="#F4C99B" stroke-width="4" stroke-linecap="round"/>' +
+    '</g>' },
+];
+
+/* ================= 通用工具 ================= */
+const $ = s => document.querySelector(s);
+const byId = id => VEHICLES.find(v => v.id === id);
+const state = { wins:0, lastTarget:null, target:null, busy:false, nextTimer:null,
+                scene:null, sceneQueue:[], playBusy:false };
+
+function svgOf(v) {
+  return '<svg class="v-svg" viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+    SHADOW + v.body + '</svg>';
+}
+
+/* ================= 音效（WebAudio 合成） ================= */
+const Sfx = {
+  ctx:null, noiseBuf:null,
+  init() {
+    if (!this.ctx) {
+      try {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const len = this.ctx.sampleRate, buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        this.noiseBuf = buf;
+      } catch (e) {}
+    }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  now() { return this.ctx ? this.ctx.currentTime : 0; },
+  note(f, t, d, type, g) {
+    if (!this.ctx) return;
+    const o = this.ctx.createOscillator(), v = this.ctx.createGain();
+    o.type = type || 'triangle'; o.frequency.value = f;
+    v.gain.setValueAtTime(0.0001, t);
+    v.gain.exponentialRampToValueAtTime(g || 0.12, t + 0.02);
+    v.gain.exponentialRampToValueAtTime(0.0001, t + (d || 0.18));
+    o.connect(v); v.connect(this.ctx.destination);
+    o.start(t); o.stop(t + (d || 0.18) + 0.05);
+  },
+  noise(t, d, g, fc) {
+    if (!this.ctx) return;
+    const s = this.ctx.createBufferSource(); s.buffer = this.noiseBuf;
+    const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = fc || 1200; f.Q.value = .8;
+    const v = this.ctx.createGain();
+    v.gain.setValueAtTime(0.0001, t);
+    v.gain.exponentialRampToValueAtTime(g || 0.1, t + 0.03);
+    v.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    s.connect(f); f.connect(v); v.connect(this.ctx.destination);
+    s.start(t); s.stop(t + d + 0.05);
+  },
+  tap() { this.note(660, this.now(), 0.1, 'triangle', 0.07); },
+  good() { const t = this.now(); [523,659,784,1047].forEach((f,i)=>this.note(f, t+i*0.11, 0.22, 'triangle', 0.13)); },
+  bad() { const t = this.now(); this.note(392, t, 0.16, 'sine', 0.07); this.note(330, t+0.17, 0.24, 'sine', 0.07); },
+  fanfare() { const t = this.now(); [523,659,784,1047,784,1047,1319].forEach((f,i)=>this.note(f, t+i*0.13, 0.26, 'triangle', 0.14)); },
+  siren() {
+    if (!this.ctx) return; const t = this.now();
+    const o = this.ctx.createOscillator(), v = this.ctx.createGain();
+    o.type = 'triangle';
+    for (let i = 0; i < 6; i++) o.frequency.setValueAtTime(i % 2 ? 600 : 850, t + i * 0.34);
+    v.gain.setValueAtTime(0.08, t); v.gain.setValueAtTime(0.08, t + 1.9);
+    v.gain.exponentialRampToValueAtTime(0.0001, t + 2.1);
+    o.connect(v); v.connect(this.ctx.destination); o.start(t); o.stop(t + 2.15);
+  },
+  dig() { const t = this.now(); this.noise(t, .4, .12, 500); this.note(90, t+.32, .3, 'sine', .16); this.noise(t+.55, .35, .1, 400); },
+  splash() { const t = this.now(); this.noise(t, .8, .12, 2400); this.noise(t+.3, .8, .1, 1800); },
+  pour() { const t = this.now(); this.noise(t, 1.1, .12, 700); this.note(110, t+.2, .5, 'sine', .08); },
+  spin() { const t = this.now(); for (let i = 0; i < 8; i++) this.note(420 + (i%2)*60, t+i*.12, .08, 'square', .04); },
+  putt() { const t = this.now(); for (let i = 0; i < 6; i++) this.note(105, t+i*.16, .09, 'square', .1); },
+  beep() { const t = this.now(); this.note(988, t, .14, 'square', .06); this.note(988, t+.22, .14, 'square', .06); },
+  ding() { const t = this.now(); this.note(1319, t, .3, 'sine', .1); this.note(1568, t+.18, .4, 'sine', .08); },
+  play(name) { this.init(); (this[name] || this.tap).call(this); }
+};
+
+/* ================= 语音：音频文件优先，系统 TTS 兜底 ================= */
+const Speech = {
+  zhVoice:null, enVoice:null, ok:('speechSynthesis' in window),
+  init() {
+    if (!this.ok) return;
+    const pick = () => {
+      const vs = speechSynthesis.getVoices();
+      this.zhVoice = vs.find(v => /^zh[-_]CN/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null;
+      this.enVoice = vs.find(v => /^en[-_]US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
+    };
+    pick();
+    if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = pick;
+  },
+  stop() { if (this.ok) speechSynthesis.cancel(); },
+  /* 朗读单条，返回 Promise（Chrome 的 cancel→speak 需要隔一拍，否则静音） */
+  one(text, lang) {
+    return new Promise(res => {
+      if (!this.ok) { res(); return; }
+      setTimeout(() => {
+        const u = new SpeechSynthesisUtterance(text);
+        const en = lang === 'en';
+        u.lang = en ? 'en-US' : 'zh-CN';
+        const v = en ? this.enVoice : this.zhVoice;
+        if (v) u.voice = v;
+        u.rate = en ? 0.8 : 0.9; u.pitch = 1.1;
+        let done = false;
+        const fin = () => { if (!done) { done = true; res(); } };
+        u.onend = fin; u.onerror = fin;
+        setTimeout(fin, 1000 + text.length * 450);
+        speechSynthesis.speak(u);
+      }, 90);
+    });
+  }
+};
+const Voice = {
+  token:0, cur:null, cache:{}, missing:{},
+  stop() {
+    this.token++;
+    if (this.cur) { try { this.cur.pause(); } catch (e) {} this.cur = null; }
+    Speech.stop();
+  },
+  /* item: {k:音频文件key, t:文本, lang:'zh'|'en'} */
+  playOne(item) {
+    return new Promise(res => {
+      if (this.missing[item.k]) { Speech.one(item.t, item.lang).then(res); return; }
+      let a = this.cache[item.k];
+      if (!a) { a = new Audio('audio/' + item.k + '.mp3'); a.preload = 'auto'; this.cache[item.k] = a; }
+      this.cur = a;
+      let done = false;
+      const fin = () => { if (!done) { done = true; this.cur = null; res(); } };
+      const fallback = () => { if (!done) { done = true; this.cur = null; Speech.one(item.t, item.lang).then(res); } };
+      a.onended = fin;
+      /* 资源真加载失败（404等）才记为缺失，永久走TTS */
+      a.onerror = () => { this.missing[item.k] = 1; fallback(); };
+      try { a.currentTime = 0; } catch (e) {}
+      /* play被自动播放策略等临时拦截：本次回退TTS，但不标记缺失 */
+      a.play().catch(fallback);
+    });
+  },
+  async say(items) {
+    this.stop();
+    const t = this.token;
+    for (const it of items) {
+      if (t !== this.token) return;
+      await this.playOne(it);
+      if (t !== this.token) return;
+      await new Promise(r => setTimeout(r, 160));
+    }
+  }
+};
+const L = {
+  welcome:'你好呀！欢迎来到图图认车车！点一点，认识好多车车吧！',
+  try_again:'哎呀，再试试！',
+  play_hint:'用小手把车车拖到上面的画里，试试看！',
+  play_wrong:'再想想，应该开哪辆车呢？',
+  praise:['太棒了！','真厉害！','答对啦！','图图真棒！','好聪明呀！']
+};
+
+/* ================= 彩带 / 烟花 ================= */
+const FX = {
+  cv:null, cx:null, parts:[], running:false,
+  colors:['#FF5D5D','#FF8A3D','#FFD23E','#48BB78','#4FA3F7','#9F7AEA','#F687B3'],
+  reduced:window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  init() {
+    this.cv = $('#fx'); this.cx = this.cv.getContext('2d');
+    const fit = () => {
+      const d = Math.min(window.devicePixelRatio || 1, 2);
+      this.cv.width = innerWidth * d; this.cv.height = innerHeight * d;
+      this.cx.setTransform(d, 0, 0, d, 0, 0);
+    };
+    fit(); addEventListener('resize', fit);
+  },
+  burst(x, y, n) {
+    if (this.reduced) n = Math.min(n, 12);
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 6;
+      this.parts.push({ x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - 3,
+        size:5 + Math.random()*6, rot:Math.random()*Math.PI, vr:(Math.random()-.5)*.3, life:1,
+        color:this.colors[(Math.random()*this.colors.length)|0], round:Math.random()<.4 });
+    }
+    if (!this.running) { this.running = true; requestAnimationFrame(() => this.step()); }
+  },
+  fireworks() {
+    const pts = [[.5,.3],[.25,.4],[.75,.35],[.4,.25],[.65,.45]];
+    pts.forEach((p,i)=>setTimeout(()=>this.burst(innerWidth*p[0], innerHeight*p[1], 55), i*350));
+  },
+  step() {
+    const c = this.cx;
+    c.clearRect(0, 0, innerWidth, innerHeight);
+    this.parts = this.parts.filter(p => p.life > 0);
+    for (const p of this.parts) {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.18; p.rot += p.vr; p.life -= 0.012;
+      c.save(); c.globalAlpha = Math.max(0, p.life);
+      c.translate(p.x, p.y); c.rotate(p.rot); c.fillStyle = p.color;
+      if (p.round) { c.beginPath(); c.arc(0, 0, p.size/2, 0, 7); c.fill(); }
+      else c.fillRect(-p.size/2, -p.size/3, p.size, p.size*.66);
+      c.restore();
+    }
+    if (this.parts.length) requestAnimationFrame(() => this.step());
+    else { this.running = false; c.clearRect(0, 0, innerWidth, innerHeight); }
+  }
+};
+
+/* ================= 认一认 ================= */
+function renderGrid() {
+  $('#grid').innerHTML = VEHICLES.map(v =>
+    '<button class="card" data-id="' + v.id + '" aria-label="' + v.zh + ' ' + v.en + '">' +
+      svgOf(v) +
+      '<span class="card-name">' + v.zh + '</span>' +
+      '<span class="card-en">' + v.en + '</span>' +
+    '</button>').join('');
+}
+function openDetail(id) {
+  const v = byId(id);
+  if (!v) return;
+  Sfx.play('tap');
+  const fig = $('#d-fig');
+  fig.innerHTML = svgOf(v);
+  fig.dataset.vid = id;
+  fig.classList.remove('acting');
+  $('#d-zh').textContent = v.zh;
+  $('#d-en').textContent = v.en;
+  $('#d-desc').textContent = v.desc;
+  $('#detail').style.background = 'linear-gradient(180deg,' + v.color + '33 0%, #FFFDF6 70%) #FFFDF6';
+  $('#detail').classList.add('open');
+  $('#detail').dataset.id = id;
+  Voice.say([
+    { k:'n_' + id, t:v.zh, lang:'zh' },
+    { k:'e_' + id, t:v.en, lang:'en' },
+    { k:'e_' + id, t:v.en, lang:'en' },
+    { k:'d_' + id, t:v.desc, lang:'zh' }
+  ]);
+}
+function doAction() {
+  const id = $('#detail').dataset.id, v = byId(id);
+  if (!v) return;
+  const fig = $('#d-fig');
+  fig.classList.remove('acting');
+  void fig.offsetWidth;
+  fig.classList.add('acting');
+  Sfx.play(v.act.sfx);
+  Voice.say([{ k:'a_' + id, t:v.act.line, lang:'zh' }]);
+  setTimeout(() => fig.classList.remove('acting'), 3000);
+}
+function closeDetail() {
+  Sfx.play('tap'); Voice.stop();
+  $('#detail').classList.remove('open');
+}
+
+/* ================= 找一找 ================= */
+function pickTarget() {
+  let v, guard = 0;
+  do { v = VEHICLES[(Math.random() * VEHICLES.length) | 0]; }
+  while (v.id === state.lastTarget && ++guard < 20);
+  state.lastTarget = v.id;
+  return v;
+}
+function newQuiz() {
+  clearTimeout(state.nextTimer);
+  state.busy = false;
+  const target = pickTarget();
+  state.target = target.id;
+  const nOpts = state.wins >= 4 ? 3 : 2;
+  const others = VEHICLES.filter(v => v.id !== target.id);
+  const opts = [target];
+  while (opts.length < nOpts) opts.push(others.splice((Math.random()*others.length)|0, 1)[0]);
+  opts.sort(() => Math.random() - 0.5);
+  $('#q-name').textContent = target.zh;
+  const box = $('#quiz-opts');
+  box.className = nOpts === 3 ? 'n3' : '';
+  box.innerHTML = opts.map(v => '<button class="opt" data-id="' + v.id + '" aria-label="选项"></button>').join('');
+  box.querySelectorAll('.opt').forEach((el, i) => { el.innerHTML = svgOf(opts[i]); });
+  askQuiz();
+}
+function askQuiz() {
+  const v = byId(state.target);
+  if (v) Voice.say([{ k:'q_' + v.id, t:'找一找，哪一个是' + v.zh + '？', lang:'zh' }]);
+}
+function showReward() {
+  const box = $('#reward-box');
+  box.innerHTML = ICONS.bigstar + '<div class="reward-txt">' +
+    L.praise[(Math.random()*L.praise.length)|0] + '</div>';
+  const r = $('#reward');
+  r.classList.add('show');
+  setTimeout(() => r.classList.remove('show'), 1650);
+}
+function onPick(el) {
+  if (state.busy) return;
+  const id = el.dataset.id, v = byId(id), target = byId(state.target);
+  if (!v || !target) return;
+  if (id === state.target) {
+    state.busy = true;
+    state.wins++;
+    el.classList.add('win');
+    el.parentElement.querySelectorAll('.opt').forEach(o => { if (o !== el) o.classList.add('dim'); });
+    Sfx.play('good');
+    const r = el.getBoundingClientRect();
+    FX.burst(r.left + r.width/2, r.top + r.height/3, 70);
+    showReward();
+    const pi = (Math.random()*L.praise.length)|0;
+    Voice.say([
+      { k:'praise_' + pi, t:L.praise[pi], lang:'zh' },
+      { k:'n_' + id, t:target.zh, lang:'zh' },
+      { k:'e_' + id, t:target.en, lang:'en' }
+    ]);
+    state.nextTimer = setTimeout(() => {
+      if ($('#view-quiz').classList.contains('active')) newQuiz();
+    }, 3400);
+  } else {
+    el.classList.remove('lose'); void el.offsetWidth; el.classList.add('lose');
+    Sfx.play('bad');
+    Voice.say([
+      { k:'w_' + id, t:'这是' + v.zh + '，', lang:'zh' },
+      { k:'q_' + target.id, t:'找一找，哪一个是' + target.zh + '？', lang:'zh' }
+    ]);
+  }
+}
+
+/* ================= 玩一玩（拖拽场景） ================= */
+const SCENE_BASE =
+  '<rect width="420" height="230" fill="#E9F6FF"/>' +
+  '<circle cx="58" cy="46" r="22" fill="#FFD23E"/><circle cx="58" cy="46" r="28" fill="#FFD23E" opacity=".3"/>' +
+  '<rect x="0" y="168" width="420" height="62" fill="#A8B8AC"/>' +
+  '<rect x="0" y="168" width="420" height="10" fill="#8FA293"/>' +
+  '<rect x="0" y="196" width="420" height="5" rx="2.5" fill="#fff" opacity=".7"/>';
+const SCENE_ROAD =
+  '<rect width="420" height="230" fill="#E9F6FF"/>' +
+  '<circle cx="58" cy="46" r="22" fill="#FFD23E"/><circle cx="58" cy="46" r="28" fill="#FFD23E" opacity=".3"/>' +
+  '<rect x="0" y="150" width="420" height="80" fill="#8D9AAB"/>' +
+  '<rect x="0" y="150" width="420" height="8" fill="#7B8794"/>' +
+  '<path d="M10 192 h36 M70 192 h36 M130 192 h36 M190 192 h36 M250 192 h36 M310 192 h36 M370 192 h36" stroke="#fff" stroke-width="5" stroke-dasharray="26 24"/>';
+const ROAD_SCENES = { thief:1, dusty:1, bumpy:1, trash:1, sick:1 };
+
+function nextScene() {
+  if (!state.sceneQueue.length) {
+    state.sceneQueue = SCENES.map((s,i)=>i).sort(()=>Math.random()-0.5);
+  }
+  const sc = SCENES[state.sceneQueue.shift()];
+  state.scene = sc;
+  state.playBusy = false;
+  const base = ROAD_SCENES[sc.id] ? SCENE_ROAD : SCENE_BASE;
+  const stars = '<g class="stars" id="scene-stars">' +
+    '<path d="m120 60 4 8 9 1-6.5 6 1.5 9-8-4.5-8 4.5 1.5-9-6.5-6 9-1z" fill="#FFD23E"/>' +
+    '<path d="m340 44 3 6 7 1-5 4.6 1.2 7-6.2-3.5-6.2 3.5 1.2-7-5-4.6 7-1z" fill="#FFD23E"/>' +
+    '<path d="m250 70 2.6 5.2 6 .8-4.3 4 1 6-5.3-3-5.3 3 1-6-4.3-4 6-.8z" fill="#FFB020"/></g>';
+  $('#scene-svg').innerHTML = base + sc.art + stars;
+  $('#s-text').textContent = sc.q;
+  const sv = $('#scene-vehicle');
+  sv.innerHTML = ''; sv.classList.remove('animate','acting');
+  sv.style.transition = 'none'; sv.style.transform = 'translateX(-150vw)';
+  const correct = byId(sc.v);
+  const others = VEHICLES.filter(v => v.id !== sc.v && sc.exclude.indexOf(v.id) < 0);
+  const opts = [correct];
+  while (opts.length < 3) opts.push(others.splice((Math.random()*others.length)|0, 1)[0]);
+  opts.sort(() => Math.random() - 0.5);
+  $('#play-opts').innerHTML = opts.map(v =>
+    '<div class="p-opt" data-id="' + v.id + '" aria-label="' + v.zh + '">' + svgOf(v) +
+    '<span class="p-name">' + v.zh + '</span></div>').join('');
+  askScene();
+}
+function askScene() {
+  const sc = state.scene;
+  if (sc) Voice.say([{ k:'s_' + sc.id, t:sc.q, lang:'zh' }]);
+}
+function sceneWin(optEl) {
+  const sc = state.scene, v = byId(sc.v);
+  state.playBusy = true;
+  optEl.classList.add('gone');
+  document.querySelectorAll('.p-opt').forEach(o => { if (o !== optEl) o.style.opacity = .35; });
+  const sv = $('#scene-vehicle');
+  sv.innerHTML = svgOf(v);
+  sv.dataset.vid = sc.v;
+  sv.classList.add('animate');
+  /* 按场景SVG的实际缩放（viewBox 420x230, slice 底对齐）给车定尺寸和落点，
+     让车和场景里的房子、人物比例匹配：车宽≈160个场景单位，车底落在 y≈214，
+     停在出事地点（x≈240 单位）的左边 */
+  const box = $('#scene-box').getBoundingClientRect();
+  const scale = Math.max(box.width / 420, box.height / 230);
+  const W = 160 * scale;
+  sv.style.width = W + 'px';
+  sv.style.bottom = (16 * scale) + 'px';
+  sv.style.transition = 'none';
+  sv.style.transform = 'translateX(' + (-W - 80) + 'px)';
+  void sv.offsetWidth;
+  sv.style.transition = 'transform 2s ease';
+  const leftPx = box.width / 2 - 210 * scale + 75 * scale;
+  /* 用 setTimeout 而非 rAF：后台/节流环境下 rAF 可能长时间不触发 */
+  setTimeout(() => { sv.style.transform = 'translateX(' + leftPx + 'px)'; }, 60);
+  Sfx.play(v.act.sfx === 'siren' ? 'siren' : 'good');
+  setTimeout(() => {
+    sv.classList.add('acting');
+    Sfx.play(v.act.sfx);
+    const prop = $('#scene-svg .prop');
+    if (prop) prop.classList.add('solved');
+    const st = $('#scene-stars');
+    if (st) st.classList.add('show');
+    FX.burst(box.left + box.width*.55, box.top + box.height*.45, 70);
+    showReward();
+    const pi = (Math.random()*L.praise.length)|0;
+    Voice.say([
+      { k:'sw_' + sc.id, t:sc.win, lang:'zh' },
+      { k:'praise_' + pi, t:L.praise[pi], lang:'zh' }
+    ]);
+  }, 2100);
+  state.nextTimer = setTimeout(() => {
+    if ($('#view-play').classList.contains('active')) nextScene();
+  }, 7200);
+}
+function sceneWrong(optEl) {
+  const v = byId(optEl.dataset.id), sc = state.scene;
+  optEl.classList.remove('wiggle'); void optEl.offsetWidth; optEl.classList.add('wiggle');
+  Sfx.play('bad');
+  Voice.say([
+    { k:'w_' + v.id, t:'这是' + v.zh + '，', lang:'zh' },
+    { k:'play_wrong', t:L.play_wrong, lang:'zh' }
+  ]);
+}
+
+/* —— 拖拽 —— */
+const Drag = { el:null, id:null, moved:false, sx:0, sy:0 };
+function dragStart(e) {
+  if (state.playBusy) return;
+  const opt = e.target.closest('.p-opt');
+  if (!opt) return;
+  e.preventDefault();
+  Drag.el = opt; Drag.id = opt.dataset.id; Drag.moved = false;
+  Drag.sx = e.clientX; Drag.sy = e.clientY;
+  opt.setPointerCapture && opt.setPointerCapture(e.pointerId);
+}
+function dragMove(e) {
+  if (!Drag.el) return;
+  if (!Drag.moved && Math.hypot(e.clientX - Drag.sx, e.clientY - Drag.sy) > 10) {
+    Drag.moved = true;
+    const g = $('#ghost');
+    g.classList.remove('back');
+    g.innerHTML = svgOf(byId(Drag.id));
+    g.style.display = 'block';
+    Drag.el.classList.add('dragging');
+    Sfx.play('tap');
+  }
+  if (Drag.moved) {
+    const g = $('#ghost');
+    g.style.left = (e.clientX - 85) + 'px';
+    g.style.top = (e.clientY - 70) + 'px';
+  }
+}
+function dragEnd(e) {
+  if (!Drag.el) return;
+  const opt = Drag.el, id = Drag.id, moved = Drag.moved;
+  Drag.el = null;
+  opt.classList.remove('dragging');
+  const g = $('#ghost');
+  if (!moved) {
+    g.style.display = 'none';
+    Sfx.play('tap');
+    Voice.say([{ k:'play_hint', t:L.play_hint, lang:'zh' }]);
+    opt.classList.remove('wiggle'); void opt.offsetWidth; opt.classList.add('wiggle');
+    return;
+  }
+  const box = $('#scene-box').getBoundingClientRect();
+  const inScene = e.clientX > box.left && e.clientX < box.right && e.clientY > box.top && e.clientY < box.bottom;
+  if (inScene && id === state.scene.v) {
+    g.style.display = 'none';
+    sceneWin(opt);
+  } else {
+    const r = opt.getBoundingClientRect();
+    g.classList.add('back');
+    g.style.left = (r.left + r.width/2 - 85) + 'px';
+    g.style.top = (r.top + r.height/2 - 70) + 'px';
+    setTimeout(() => { g.style.display = 'none'; g.classList.remove('back'); }, 380);
+    if (inScene) sceneWrong(opt);
+  }
+}
+
+/* ================= 视图切换 ================= */
+function setView(name) {
+  clearTimeout(state.nextTimer);
+  Voice.stop();
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  $('#view-' + name).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
+  if (name === 'quiz') newQuiz();
+  if (name === 'play') nextScene();
+}
+
+/* ================= 事件绑定 ================= */
+function bind() {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => { Sfx.play('tap'); setView(t.dataset.view); });
+  });
+  $('#grid').addEventListener('click', e => {
+    const card = e.target.closest('.card');
+    if (card) openDetail(card.dataset.id);
+  });
+  $('#btn-close').addEventListener('click', closeDetail);
+  $('#d-fig').addEventListener('click', doAction);
+  $('#quiz-opts').addEventListener('click', e => {
+    const opt = e.target.closest('.opt');
+    if (opt) onPick(opt);
+  });
+  $('#btn-q-say').addEventListener('click', () => { Sfx.play('tap'); askQuiz(); });
+  $('#btn-s-say').addEventListener('click', () => { Sfx.play('tap'); askScene(); });
+  const po = $('#play-opts');
+  po.addEventListener('pointerdown', dragStart);
+  addEventListener('pointermove', dragMove);
+  addEventListener('pointerup', dragEnd);
+  addEventListener('pointercancel', dragEnd);
+  $('#btn-start').addEventListener('click', () => {
+    Sfx.init(); Sfx.play('good');
+    Speech.init();
+    Voice.say([{ k:'welcome', t:L.welcome, lang:'zh' }]);
+    $('#start').style.display = 'none';
+  });
+}
+
+/* ================= 启动 ================= */
+function initIcons() {
+  const tabs = document.querySelectorAll('.tab');
+  tabs[0].innerHTML = ICONS.book + '<span>认一认</span>';
+  tabs[1].innerHTML = ICONS.search + '<span>找一找</span>';
+  tabs[2].innerHTML = ICONS.game + '<span>玩一玩</span>';
+  $('#btn-close').innerHTML = ICONS.close;
+  $('#btn-q-say').innerHTML = '<span style="color:#fff">' + ICONS.speaker + '</span>';
+  $('#btn-s-say').innerHTML = '<span style="color:#fff">' + ICONS.speaker + '</span>';
+  $('#btn-start').querySelector('.ic').outerHTML = ICONS.play;
+  $('#tap-hint').innerHTML = ICONS.hand + '点一点车车，看它干活！';
+  $('#start-hero').innerHTML = svgOf(VEHICLES[0]);
+}
+Speech.init();
+FX.init();
+initIcons();
+renderGrid();
+bind();
+</script>
+</body>
+</html>
