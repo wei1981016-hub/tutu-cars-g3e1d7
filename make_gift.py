@@ -10,8 +10,9 @@
   python3 make_gift.py 乐乐 --voice cosyvoice-v2-xxx     # 已有克隆音色ID时直接用
   加 --no-deploy 只生成本地文件不发布
 
-步骤：克隆家长音色（录音经主仓库的 GitHub Pages 临时中转给阿里云——release 和
-  raw 地址阿里云拉不到，github.io 实测可以；注册完立即 force-push 抹掉，不留历史）
+步骤：克隆家长音色——录音经专用中转仓库 voice-relay 的 GitHub Pages 临时暴露给
+  阿里云（release/raw 地址阿里云拉不到，github.io 实测可以），注册完立即用孤儿
+  提交覆盖中转仓库，不留任何历史；游戏主仓库全程不动。
   → 用该音色生成全部 153 条语音 → 替换游戏里的宝宝名字 → 发布成独立网址。
 同一音色的 150 条通用语音会缓存在 gifts/_packs/，同一家重新生成时秒出。
 
@@ -51,31 +52,54 @@ def main_repo():
     return r.stdout.strip()
 
 
+RELAY = "voice-relay"   # 专用中转仓库：只放当前这一份临时录音，每次孤儿提交整体覆盖
+
+
+def relay_push(owner, files_dir, msg):
+    """把 files_dir 的内容作为唯一一笔孤儿提交覆盖中转仓库（不保留任何历史）"""
+    run(["git", "init", "-b", "main", "-q"], cwd=files_dir)
+    run(["git", "add", "-A"], cwd=files_dir)
+    run(["git", "commit", "-q", "-m", msg], cwd=files_dir)
+    run(["git", "push", "--force", "-q",
+         "https://github.com/%s/%s.git" % (owner, RELAY), "main"], cwd=files_dir)
+
+
+def ensure_relay(owner):
+    r = subprocess.run(["gh", "repo", "view", "%s/%s" % (owner, RELAY)],
+                       capture_output=True, text=True)
+    if r.returncode == 0:
+        return
+    print("首次使用：创建录音中转仓库 %s/%s（公开、仅存临时文件）" % (owner, RELAY))
+    run(["gh", "repo", "create", RELAY, "--public",
+         "--description", "temp voice relay, auto-cleared"])
+    tmpd = tempfile.mkdtemp()
+    open(os.path.join(tmpd, "README.md"), "w").write(
+        "临时语音中转，注册音色后自动清空。\n")
+    relay_push(owner, tmpd, "init")
+    shutil.rmtree(tmpd, ignore_errors=True)
+    run(["gh", "api", "-X", "POST", "repos/%s/%s/pages" % (owner, RELAY),
+         "-f", "source[branch]=main", "-f", "source[path]=/"])
+
+
 def enroll_voice(sample, slug):
-    """用家长录音克隆音色：主仓库 Pages 临时中转 -> 复刻 -> force-push 抹掉，返回音色ID"""
+    """家长录音 -> voice-relay 中转 -> 复刻 -> 清空中转，返回音色ID。不碰游戏主仓库"""
     if not os.path.isfile(sample):
         sys.exit("录音文件不存在：%s" % sample)
     ext = (os.path.splitext(sample)[1] or ".mp3").lower()
     if ext not in (".mp3", ".wav", ".m4a", ".aac"):
         sys.exit("录音格式请用 mp3/wav/m4a/aac，收到：%s" % ext)
-    dirty = run(["git", "status", "--porcelain", "-uno"], cwd=ROOT).stdout.strip()
-    if dirty:
-        sys.exit("主仓库有未提交的改动（录音中转需要临时提交+force-push 回退）：\n%s\n"
-                 "请先 git commit 或还原这些改动再生成礼物" % dirty)
-    repo = main_repo()
-    owner, rname = repo.split("/")
-    head = run(["git", "rev-parse", "HEAD"], cwd=ROOT).stdout.strip()
+    owner = run(["gh", "api", "user", "--jq", ".login"]).stdout.strip()
+    ensure_relay(owner)
     fname = "voice-%s%s" % (slug, ext)
-    tmp_dir = os.path.join(ROOT, "tmpvoice")
-    os.makedirs(tmp_dir, exist_ok=True)
-    shutil.copy2(sample, os.path.join(tmp_dir, fname))
-    url = "https://%s.github.io/%s/tmpvoice/%s" % (owner, rname, fname)
-    print("克隆家长音色（录音经 %s 临时中转，注册后立即抹掉）" % url)
+    url = "https://%s.github.io/%s/%s" % (owner, RELAY, fname)
+    print("克隆家长音色（录音经 %s 临时中转，注册后立即清空）" % url)
     vid = None
     try:
-        run(["git", "add", "tmpvoice/" + fname], cwd=ROOT)
-        run(["git", "commit", "-q", "-m", "tmp voice sample (auto-removed)"], cwd=ROOT)
-        run(["git", "push", "-q"], cwd=ROOT)
+        tmpd = tempfile.mkdtemp()
+        shutil.copy2(sample, os.path.join(tmpd, fname))
+        open(os.path.join(tmpd, ".nojekyll"), "w").write("")
+        relay_push(owner, tmpd, "relay " + slug)
+        shutil.rmtree(tmpd, ignore_errors=True)
         print("等待 Pages 发布录音", end="", flush=True)
         for _ in range(36):
             code = subprocess.run(["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", url],
@@ -100,10 +124,12 @@ def enroll_voice(sample, slug):
                 print("  复刻失败（第%d次）：%s" % (attempt + 1, e))
                 time.sleep(3)
     finally:
-        # 无论成败都把临时提交从历史里抹掉
-        run(["git", "reset", "--hard", head, "-q"], cwd=ROOT, check=False)
-        run(["git", "push", "--force", "-q"], cwd=ROOT, check=False)
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+        # 无论成败，立即用孤儿提交清空中转仓库（录音不留任何可达历史）
+        tmpd = tempfile.mkdtemp()
+        open(os.path.join(tmpd, "README.md"), "w").write(
+            "临时语音中转，注册音色后自动清空。\n")
+        relay_push(owner, tmpd, "clear")
+        shutil.rmtree(tmpd, ignore_errors=True)
     if not vid:
         sys.exit("声音复刻失败。备选：到阿里云百炼控制台手动复刻，拿到音色ID后用 --voice 传入")
     print("音色克隆成功：%s（记下来，这家以后重新生成可直接 --voice 复用）" % vid)
