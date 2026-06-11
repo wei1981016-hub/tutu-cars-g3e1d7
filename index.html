@@ -157,9 +157,9 @@ nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.13)}100%{transform:scale(1)}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}50%{transform:translateX(8px)}75%{transform:translateX(-5px)}}
 .animate .v-svg{animation:bob 2.4s ease-in-out infinite}
-.animate .wheel{animation:spin 1.7s linear infinite}
+.animate .wheel{animation:spin 3.2s linear infinite}
 .animate .part-arm,.animate .part-sway{animation:rock 3s ease-in-out infinite}
-.animate .part-drum{animation:wobble 1.1s ease-in-out infinite}
+.animate .drum-roll{animation:drumTurn 1.6s linear infinite}
 .animate .part-hook{animation:hookdown 3s ease-in-out infinite}
 .animate .part-water{animation:spray 1s linear infinite}
 .animate .part-smoke{animation:smoke 1.4s ease-out infinite}
@@ -169,8 +169,11 @@ nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset
 /* ===== 互动动作（点车触发，一次性） ===== */
 @keyframes digOnce{0%{transform:rotate(0)}30%{transform:rotate(17deg)}50%{transform:rotate(19deg)}80%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
 @keyframes tiltOnce{0%,100%{transform:rotate(0)}35%{transform:rotate(-24deg)}70%{transform:rotate(-24deg)}}
-@keyframes pushOnce{0%,100%{transform:translateX(0)}35%{transform:translateX(-13px)}65%{transform:translateX(-13px)}}
-@keyframes scoopOnce{0%,100%{transform:rotate(0)}35%{transform:rotate(-18deg)}70%{transform:rotate(-14deg)}}
+@keyframes driveOnce{0%,100%{transform:translateX(0)}35%{transform:translateX(-16px)}65%{transform:translateX(-16px)}}
+@keyframes bladeDip{0%,100%{transform:translateY(0)}30%{transform:translateY(6px)}65%{transform:translateY(6px)}}
+@keyframes curlOnce{0%,100%{transform:rotate(0)}40%{transform:rotate(26deg)}65%{transform:rotate(20deg)}}
+@keyframes drumTurn{to{transform:translateX(-24px)}}
+@keyframes scoopOnce{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}55%{transform:rotate(14deg)}80%{transform:rotate(12deg)}}
 @keyframes liftOnce{0%,100%{transform:translateY(0)}40%{transform:translateY(-30px)}75%{transform:translateY(-30px)}}
 @keyframes dropOnce{0%,100%{transform:translateY(0)}40%{transform:translateY(22px)}75%{transform:translateY(20px)}}
 @keyframes ladderOnce{0%,100%{transform:rotate(0)}40%{transform:rotate(-16deg)}75%{transform:rotate(-16deg)}}
@@ -186,8 +189,10 @@ nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset
 .fx{opacity:0}
 .acting .v-svg{animation:bob .5s ease-in-out 4}
 .acting[data-vid="excavator"] .part-arm{animation:digOnce 2.4s ease-in-out 1}
+.acting[data-vid="excavator"] .part-bucket{animation:curlOnce 2.4s ease-in-out 1}
 .acting[data-vid="excavator"] .fx-dig{animation:fxFall .8s ease-in .9s 2}
-.acting[data-vid="bulldozer"] .part-blade{animation:pushOnce 2.2s ease-in-out 1}
+.acting[data-vid="bulldozer"] .v-svg{animation:driveOnce 2.4s ease-in-out 1}
+.acting[data-vid="bulldozer"] .part-blade{animation:bladeDip 2.4s ease-in-out 1}
 .acting[data-vid="bulldozer"] .fx-dirt{animation:fxFall .8s ease-in .5s 2}
 .acting[data-vid="loader"] .part-scoop{animation:scoopOnce 2.2s ease-in-out 1}
 .acting[data-vid="loader"] .fx-dirt{animation:fxFall .8s ease-in .7s 2}
@@ -195,15 +200,18 @@ nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset
 .acting[data-vid="towercrane"] .part-trolley{animation:trolleyOnce 2.6s ease-in-out 1}
 .acting[data-vid="dumptruck"] .part-bed{animation:tiltOnce 2.6s ease-in-out 1}
 .acting[data-vid="dumptruck"] .fx-dirt{animation:fxFall .8s ease-in .8s 2}
-.acting[data-vid="mixer"] .part-drum{animation:spinFastK .5s linear 4}
+.acting[data-vid="mixer"] .drum-roll{animation:drumTurn .45s linear infinite}
 .acting[data-vid="roller"] .wheel{animation:spinFastK .5s linear 5}
+.acting[data-vid="roller"] .v-svg{animation:driveOnce 2.4s ease-in-out 1}
 .acting[data-vid="forklift"] .part-fork{animation:liftOnce 2.6s ease-in-out 1}
 .acting[data-vid="pumptruck"] .part-sway{animation:swayOnce 2.4s ease-in-out 1}
 .acting[data-vid="pumptruck"] .fx-pour{animation:fxPour .8s ease-in .8s 2}
-.acting[data-vid="grader"] .part-blade{animation:pushOnce 2.2s ease-in-out 1}
+.acting[data-vid="grader"] .v-svg{animation:driveOnce 2.4s ease-in-out 1}
+.acting[data-vid="grader"] .part-blade{animation:bladeDip 2.4s ease-in-out 1}
 .acting[data-vid="miningtruck"] .part-bed{animation:tiltOnce 2.8s ease-in-out 1}
 .acting[data-vid="miningtruck"] .fx-rock{animation:fxFall .9s ease-in .9s 2}
 .acting[data-vid="firetruck"] .part-ladder{animation:ladderOnce 2.8s ease-in-out 1}
+.acting[data-vid="firetruck"] .part-ladder2{animation:extendOnce 2.8s ease-in-out 1}
 .acting[data-vid="firetruck"] .light-a{animation:flashFast .5s linear 5}
 .acting[data-vid="policecar"] .light-a{animation:flashFast .4s linear 6}
 .acting[data-vid="policecar"] .light-b{animation:flashFast .4s linear .2s 6}
@@ -381,8 +389,10 @@ const VEHICLES = [
       HYD(100,82,132,57) +
       '<path d="M148 32 L188 60 L181 71 L141 45 Z" fill="#F6C344"/>' +
       HYD(152,44,174,60) +
+      '<g class="part-bucket" style="transform-origin:183px 66px">' +
       '<path d="M180 62 Q199 71 192 91 L172 82 Q171 70 178 62 Z" fill="#7B8794"/>' +
       '<path d="M177 88 l4 7 4 -5 4 7 4 -5" stroke="#5A6B82" stroke-width="3" fill="none"/>' +
+      '</g>' +
       '<circle cx="152" cy="39" r="4.5" fill="#9C6516"/><circle cx="183" cy="66" r="4" fill="#9C6516"/>' +
       '<g class="fx fx-dig"><circle cx="186" cy="98" r="4" fill="#8B6B4A"/><circle cx="194" cy="104" r="3" fill="#A3805C"/><circle cx="180" cy="106" r="3.5" fill="#8B6B4A"/></g>' +
     '</g>' +
@@ -529,11 +539,18 @@ const VEHICLES = [
     '<rect x="142" y="86" width="36" height="6" rx="3" fill="#C8D2DE"/>' +
     '<path d="M56 92 L70 54 L84 92 Z" fill="#7B8794"/>' +
     '<rect x="116" y="58" width="11" height="34" fill="#7B8794"/>' +
-    '<g class="part-drum" style="transform-origin:92px 60px">' +
+    /* 罐体不动；螺旋条纹经裁剪后沿罐轴滚动 = 绕自身轴线转的侧视效果（理发店转筒原理） */
+    '<g class="part-drum">' +
       '<ellipse cx="92" cy="60" rx="45" ry="26" fill="#EDF2F7" transform="rotate(-10 92 60)"/>' +
-      '<path d="M56 72 Q68 52 90 46" stroke="#4FA3F7" stroke-width="6" fill="none" stroke-linecap="round"/>' +
-      '<path d="M74 82 Q88 60 110 52" stroke="#4FA3F7" stroke-width="6" fill="none" stroke-linecap="round"/>' +
-      '<path d="M96 84 Q110 66 128 58" stroke="#4FA3F7" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+      '<clipPath id="dc__UID__"><ellipse cx="92" cy="60" rx="43" ry="24" transform="rotate(-10 92 60)"/></clipPath>' +
+      '<g clip-path="url(#dc__UID__)"><g transform="rotate(-10 92 60)"><g class="drum-roll">' +
+        '<path d="M38 34 q-12 26 0 54" stroke="#4FA3F7" stroke-width="8" fill="none"/>' +
+        '<path d="M62 34 q-12 26 0 54" stroke="#4FA3F7" stroke-width="8" fill="none"/>' +
+        '<path d="M86 34 q-12 26 0 54" stroke="#4FA3F7" stroke-width="8" fill="none"/>' +
+        '<path d="M110 34 q-12 26 0 54" stroke="#4FA3F7" stroke-width="8" fill="none"/>' +
+        '<path d="M134 34 q-12 26 0 54" stroke="#4FA3F7" stroke-width="8" fill="none"/>' +
+        '<path d="M158 34 q-12 26 0 54" stroke="#4FA3F7" stroke-width="8" fill="none"/>' +
+      '</g></g></g>' +
       '<ellipse cx="131" cy="50" rx="7" ry="11" fill="#C8D2DE" transform="rotate(-10 131 50)"/>' +
     '</g>' +
     '<path d="M132 54 L150 70" stroke="#7B8794" stroke-width="6" stroke-linecap="round"/>' +
@@ -662,9 +679,11 @@ const VEHICLES = [
   act:{ sfx:'siren', line:'云梯升起来，呜哇呜哇去灭火！' },
   body:
     '<g class="part-ladder" style="transform-origin:152px 50px">' +
+      '<g class="part-ladder2">' +
       '<rect x="36" y="44" width="74" height="3.5" rx="1.75" fill="#AEB9C6"/>' +
       '<rect x="36" y="52" width="74" height="3.5" rx="1.75" fill="#AEB9C6"/>' +
       '<path d="M44 44 v12 M58 44 v12 M72 44 v12 M86 44 v12 M100 44 v12" stroke="#8D9AAB" stroke-width="3"/>' +
+      '</g>' +
       '<rect x="52" y="40" width="104" height="4.5" rx="2.25" fill="#C8D2DE"/>' +
       '<rect x="52" y="54" width="104" height="4.5" rx="2.25" fill="#C8D2DE"/>' +
       '<path d="M64 40 v18 M82 40 v18 M100 40 v18 M118 40 v18 M136 40 v18 M150 40 v18" stroke="#98A6B8" stroke-width="3.2"/>' +
@@ -1005,9 +1024,12 @@ const byId = id => VEHICLES.find(v => v.id === id);
 const state = { wins:0, lastTarget:null, target:null, busy:false, nextTimer:null,
                 scene:null, sceneQueue:[], playBusy:false };
 
+let SVG_UID = 0;
 function svgOf(v) {
+  /* __UID__ 占位符替换成全局唯一值，避免同一车辆多处渲染时 clipPath id 冲突 */
+  const u = 'u' + (++SVG_UID);
   return '<svg class="v-svg" viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-    SHADOW + v.body + '</svg>';
+    SHADOW + v.body.split('__UID__').join(u) + '</svg>';
 }
 
 /* ================= 音效（WebAudio 合成） ================= */
