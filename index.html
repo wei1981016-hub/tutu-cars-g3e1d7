@@ -168,7 +168,8 @@ nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset
 
 /* ===== 互动动作（点车触发，一次性） ===== */
 @keyframes digOnce{0%{transform:rotate(0)}30%{transform:rotate(17deg)}50%{transform:rotate(19deg)}80%{transform:rotate(-6deg)}100%{transform:rotate(0)}}
-@keyframes tiltOnce{0%,100%{transform:rotate(0)}35%{transform:rotate(-24deg)}70%{transform:rotate(-24deg)}}
+@keyframes tiltOnce{0%,100%{transform:rotate(0)}35%{transform:rotate(24deg)}70%{transform:rotate(24deg)}}
+@keyframes tiltOnceM{0%,100%{transform:rotate(0)}35%{transform:rotate(14deg)}70%{transform:rotate(14deg)}}
 @keyframes driveOnce{0%,100%{transform:translateX(0)}35%{transform:translateX(-16px)}65%{transform:translateX(-16px)}}
 @keyframes bladeDip{0%,100%{transform:translateY(0)}30%{transform:translateY(6px)}65%{transform:translateY(6px)}}
 @keyframes curlOnce{0%,100%{transform:rotate(0)}40%{transform:rotate(26deg)}65%{transform:rotate(20deg)}}
@@ -208,7 +209,7 @@ nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset
 .acting[data-vid="pumptruck"] .fx-pour{animation:fxPour .8s ease-in .8s 2}
 .acting[data-vid="grader"] .v-svg{animation:driveOnce 2.4s ease-in-out 1}
 .acting[data-vid="grader"] .part-blade{animation:bladeDip 2.4s ease-in-out 1}
-.acting[data-vid="miningtruck"] .part-bed{animation:tiltOnce 2.8s ease-in-out 1}
+.acting[data-vid="miningtruck"] .part-bed{animation:tiltOnceM 2.8s ease-in-out 1}
 .acting[data-vid="miningtruck"] .fx-rock{animation:fxFall .9s ease-in .9s 2}
 .acting[data-vid="firetruck"] .part-ladder{animation:ladderOnce 2.8s ease-in-out 1}
 .acting[data-vid="firetruck"] .part-ladder2{animation:extendOnce 2.8s ease-in-out 1}
