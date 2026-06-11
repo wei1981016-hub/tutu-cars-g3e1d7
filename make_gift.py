@@ -170,12 +170,17 @@ def build_audio(name, voice, dst_audio):
     missing = [k for k in NAME_KEYS if not os.path.exists(os.path.join(dst_audio, k + ".mp3"))]
     if missing:
         sys.exit("语音生成不完整，缺：%s（重跑一次即可补齐）" % missing)
-    if not pack_ready:
-        os.makedirs(pack, exist_ok=True)
-        for f in os.listdir(dst_audio):
-            if f.replace(".mp3", "") not in NAME_KEYS:
-                shutil.copy2(os.path.join(dst_audio, f), os.path.join(pack, f))
-        print("音色包已缓存到 %s" % os.path.relpath(pack, ROOT))
+    # 把缓存里还没有的通用语音补进音色包（含后续新增台词）
+    os.makedirs(pack, exist_ok=True)
+    added = 0
+    for f in os.listdir(dst_audio):
+        if f.replace(".mp3", "") in NAME_KEYS:
+            continue
+        if not os.path.exists(os.path.join(pack, f)):
+            shutil.copy2(os.path.join(dst_audio, f), os.path.join(pack, f))
+            added += 1
+    if added:
+        print("音色包缓存新增 %d 条 -> %s" % (added, os.path.relpath(pack, ROOT)))
 
 
 def deploy(gift_dir, slug):

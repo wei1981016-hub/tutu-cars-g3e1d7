@@ -60,14 +60,20 @@ main{flex:1;min-height:0;position:relative}
 .tap-hint svg{width:22px;height:22px}
 @keyframes hintPulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.08);opacity:1}}
 .detail-info{text-align:center;padding:6px 16px calc(12px + env(safe-area-inset-bottom))}
-.d-zh{font-size:clamp(32px,5.5vw,46px);font-weight:900;color:#27415e;display:inline-block}
-.d-en{font-size:clamp(22px,4vw,30px);font-weight:800;color:#E07B1F;letter-spacing:1.5px;margin-left:14px;display:inline-block}
+.d-zh{font-size:clamp(32px,5.5vw,46px);font-weight:900;color:#27415e;display:inline-block;cursor:pointer}
+.d-en{font-size:clamp(22px,4vw,30px);font-weight:800;color:#E07B1F;letter-spacing:1.5px;margin-left:14px;display:inline-block;cursor:pointer;border-bottom:3px dotted #FFC98A}
+.d-zh:active,.d-en:active{transform:scale(.93)}
+#d-word{position:absolute;top:14%;right:7%;background:#FF8A3D;color:#fff;font-size:clamp(22px,3.4vw,34px);
+  font-weight:900;padding:12px 26px;border-radius:24px;box-shadow:0 5px 0 #d96a1e;display:none;z-index:3}
+#d-word.show{display:block;animation:wordPop .5s ease}
+@keyframes wordPop{0%{transform:scale(.3) rotate(8deg)}60%{transform:scale(1.15) rotate(8deg)}100%{transform:scale(1) rotate(8deg)}}
 .d-desc{font-size:clamp(17px,2.8vw,22px);line-height:1.5;max-width:680px;margin:6px auto 0;color:#41608a}
 
 /* ===== 找一找 ===== */
 #quiz-q{display:flex;align-items:center;justify-content:center;gap:16px;margin:4px 0 22px}
 .q-text{font-size:clamp(25px,4.5vw,36px);font-weight:900;color:#27415e}
 .q-text b{color:#E07B1F}
+#q-en{font-size:clamp(16px,2.6vw,22px);font-weight:800;color:#E07B1F;letter-spacing:.5px;margin-top:2px}
 .q-say{width:68px;height:68px;border-radius:50%;background:#4FA3F7;display:flex;align-items:center;justify-content:center;
   box-shadow:0 5px 0 #2f7fd4;flex:none}
 .q-say:active{transform:translateY(3px);box-shadow:0 2px 0 #2f7fd4}
@@ -252,7 +258,10 @@ nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset
     <section id="view-quiz" class="view" aria-label="找一找">
       <div id="quiz-q">
         <button class="q-say" id="btn-q-say" aria-label="再听一遍题目"></button>
-        <div class="q-text">哪一个是 <b id="q-name"></b>？</div>
+        <div style="text-align:center">
+          <div class="q-text">哪一个是 <b id="q-name"></b>？</div>
+          <div id="q-en"></div>
+        </div>
       </div>
       <div id="quiz-opts"></div>
     </section>
@@ -279,6 +288,7 @@ nav#tabs{display:flex;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset
 
 <div id="detail" role="dialog" aria-modal="true">
   <button class="detail-close" id="btn-close" aria-label="关闭"></button>
+  <div id="d-word"></div>
   <div class="detail-fig animate" id="d-fig"></div>
   <div class="tap-hint" id="tap-hint"></div>
   <div class="detail-info">
@@ -1170,6 +1180,20 @@ const L = {
   play_wrong:'再想想，应该开哪辆车呢？',
   praise:['太棒了！','真厉害！','答对啦！', KID_NAME + '真棒！','好聪明呀！']
 };
+/* 英文夸奖、各车英文动词（点车干活时朗读+气泡显示） */
+const PRAISE_EN = ['Great job!', 'Well done!', 'Awesome!'];
+const ACT_EN = {
+  excavator:'Dig, dig, dig!', bulldozer:'Push, push!', loader:'Scoop it up!',
+  crane:'Lift it up!', towercrane:'Up, up, up!', dumptruck:'Dump it out!',
+  mixer:'Mix, mix, mix!', roller:'Roll, roll, roll!', forklift:'Lift it high!',
+  pumptruck:'Pump it up!', grader:'Make it flat!', miningtruck:'So big! Go, go, go!',
+  firetruck:'Fire truck, go, go, go!', policecar:'Catch the bad guy!', ambulance:'Hurry, hurry!',
+  bus:'All aboard!', garbagetruck:'Yum, yum, trash!', watertruck:'Splash, splash!',
+  schoolbus:'Time for school!', tractor:'Putt, putt, putt!'
+};
+/* 图里朝左画的车，进场景行驶时需要水平镜像（否则像倒车） */
+const FACE_L = new Set(['bulldozer','loader','dumptruck','roller','forklift','grader',
+  'miningtruck','firetruck','ambulance','garbagetruck','watertruck','tractor']);
 
 /* ================= 彩带 / 烟花 ================= */
 const FX = {
@@ -1254,8 +1278,14 @@ function doAction() {
   void fig.offsetWidth;
   fig.classList.add('acting');
   Sfx.play(v.act.sfx);
-  Voice.say([{ k:'a_' + id, t:v.act.line, lang:'zh' }]);
-  setTimeout(() => fig.classList.remove('acting'), 3000);
+  const word = $('#d-word');
+  word.textContent = ACT_EN[id] || '';
+  word.classList.remove('show'); void word.offsetWidth; word.classList.add('show');
+  Voice.say([
+    { k:'a_' + id, t:v.act.line, lang:'zh' },
+    { k:'v_' + id, t:ACT_EN[id], lang:'en' }
+  ]);
+  setTimeout(() => { fig.classList.remove('acting'); word.classList.remove('show'); }, 3600);
 }
 function closeDetail() {
   Sfx.play('tap'); Voice.stop();
@@ -1289,7 +1319,13 @@ function newQuiz() {
 }
 function askQuiz() {
   const v = byId(state.target);
-  if (v) Voice.say([{ k:'q_' + v.id, t:'找一找，哪一个是' + v.zh + '？', lang:'zh' }]);
+  if (!v) return;
+  const qe = 'Where is the ' + v.en.toLowerCase() + '?';
+  $('#q-en').textContent = qe;
+  Voice.say([
+    { k:'q_' + v.id, t:'找一找，哪一个是' + v.zh + '？', lang:'zh' },
+    { k:'qe_' + v.id, t:qe, lang:'en' }
+  ]);
 }
 function showReward() {
   const box = $('#reward-box');
@@ -1313,14 +1349,21 @@ function onPick(el) {
     FX.burst(r.left + r.width/2, r.top + r.height/3, 70);
     showReward();
     const pi = (Math.random()*L.praise.length)|0;
-    Voice.say([
-      { k:'praise_' + pi, t:L.praise[pi], lang:'zh' },
-      { k:'n_' + id, t:target.zh, lang:'zh' },
-      { k:'e_' + id, t:target.en, lang:'en' }
-    ]);
-    state.nextTimer = setTimeout(() => {
-      if ($('#view-quiz').classList.contains('active')) newQuiz();
-    }, 3400);
+    const pe = (Math.random()*PRAISE_EN.length)|0;
+    const myTarget = state.target;
+    /* 等语音播完（含被打断提前返回）+ 最短展示时间，再进下一题 */
+    Promise.all([
+      Voice.say([
+        { k:'praise_' + pi, t:L.praise[pi], lang:'zh' },
+        { k:'e_' + id, t:target.en, lang:'en' },
+        { k:'pe_' + pe, t:PRAISE_EN[pe], lang:'en' }
+      ]),
+      new Promise(res => setTimeout(res, 2800))
+    ]).then(() => {
+      if (state.target !== myTarget || !state.busy) return;
+      if (!$('#view-quiz').classList.contains('active')) return;
+      state.nextTimer = setTimeout(newQuiz, 700);
+    });
   } else {
     el.classList.remove('lose'); void el.offsetWidth; el.classList.add('lose');
     Sfx.play('bad');
@@ -1392,15 +1435,17 @@ function sceneWin(optEl) {
   const box = $('#scene-box').getBoundingClientRect();
   const scale = Math.max(box.width / 420, box.height / 230);
   const W = 160 * scale;
+  /* 图朝左画的车要镜像，否则向右行驶像在倒车 */
+  const flip = FACE_L.has(sc.v) ? ' scaleX(-1)' : '';
   sv.style.width = W + 'px';
   sv.style.bottom = (16 * scale) + 'px';
   sv.style.transition = 'none';
-  sv.style.transform = 'translateX(' + (-W - 80) + 'px)';
+  sv.style.transform = 'translateX(' + (-W - 80) + 'px)' + flip;
   void sv.offsetWidth;
   sv.style.transition = 'transform 2s ease';
   const leftPx = box.width / 2 - 210 * scale + 75 * scale;
   /* 用 setTimeout 而非 rAF：后台/节流环境下 rAF 可能长时间不触发 */
-  setTimeout(() => { sv.style.transform = 'translateX(' + leftPx + 'px)'; }, 60);
+  setTimeout(() => { sv.style.transform = 'translateX(' + leftPx + 'px)' + flip; }, 60);
   Sfx.play(v.act.sfx === 'siren' ? 'siren' : 'good');
   setTimeout(() => {
     sv.classList.add('acting');
@@ -1411,15 +1456,20 @@ function sceneWin(optEl) {
     if (st) st.classList.add('show');
     FX.burst(box.left + box.width*.55, box.top + box.height*.45, 70);
     showReward();
-    const pi = (Math.random()*L.praise.length)|0;
-    Voice.say([
-      { k:'sw_' + sc.id, t:sc.win, lang:'zh' },
-      { k:'praise_' + pi, t:L.praise[pi], lang:'zh' }
-    ]);
+    const pe = (Math.random()*PRAISE_EN.length)|0;
+    /* 等语音播完 + 最短展示时间，再进下一个场景 */
+    Promise.all([
+      Voice.say([
+        { k:'sw_' + sc.id, t:sc.win, lang:'zh' },
+        { k:'pe_' + pe, t:PRAISE_EN[pe], lang:'en' }
+      ]),
+      new Promise(res => setTimeout(res, 2600))
+    ]).then(() => {
+      if (state.scene !== sc) return;
+      if (!$('#view-play').classList.contains('active')) return;
+      state.nextTimer = setTimeout(nextScene, 900);
+    });
   }, 2100);
-  state.nextTimer = setTimeout(() => {
-    if ($('#view-play').classList.contains('active')) nextScene();
-  }, 7200);
 }
 function sceneWrong(optEl) {
   const v = byId(optEl.dataset.id), sc = state.scene;
@@ -1509,11 +1559,22 @@ function bind() {
   });
   $('#btn-close').addEventListener('click', closeDetail);
   $('#d-fig').addEventListener('click', doAction);
+  $('#d-zh').addEventListener('click', () => {
+    const v = byId($('#detail').dataset.id);
+    if (v) { Sfx.play('tap'); Voice.say([{ k:'n_' + v.id, t:v.zh, lang:'zh' }]); }
+  });
+  $('#d-en').addEventListener('click', () => {
+    const v = byId($('#detail').dataset.id);
+    if (v) { Sfx.play('tap'); Voice.say([{ k:'e_' + v.id, t:v.en, lang:'en' }, { k:'e_' + v.id, t:v.en, lang:'en' }]); }
+  });
   $('#quiz-opts').addEventListener('click', e => {
     const opt = e.target.closest('.opt');
     if (opt) onPick(opt);
   });
-  $('#btn-q-say').addEventListener('click', () => { Sfx.play('tap'); askQuiz(); });
+  $('#btn-q-say').addEventListener('click', () => {
+    if (state.busy) return; /* 答对庆祝期间不打断，避免提前跳题 */
+    Sfx.play('tap'); askQuiz();
+  });
   $('#btn-s-say').addEventListener('click', () => { Sfx.play('tap'); askScene(); });
   const po = $('#play-opts');
   po.addEventListener('pointerdown', dragStart);

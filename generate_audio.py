@@ -61,6 +61,18 @@ SCENES = [
 # 含宝宝名字的 key（make_gift.py 据此做语音包缓存复用）
 NAME_KEYS = ["welcome", "praise_3", "sw_thief"]
 
+# 各车英文动词（与 index.html 的 ACT_EN 保持一致）
+ACT_EN = {
+    "excavator": "Dig, dig, dig!", "bulldozer": "Push, push!", "loader": "Scoop it up!",
+    "crane": "Lift it up!", "towercrane": "Up, up, up!", "dumptruck": "Dump it out!",
+    "mixer": "Mix, mix, mix!", "roller": "Roll, roll, roll!", "forklift": "Lift it high!",
+    "pumptruck": "Pump it up!", "grader": "Make it flat!", "miningtruck": "So big! Go, go, go!",
+    "firetruck": "Fire truck, go, go, go!", "policecar": "Catch the bad guy!", "ambulance": "Hurry, hurry!",
+    "bus": "All aboard!", "garbagetruck": "Yum, yum, trash!", "watertruck": "Splash, splash!",
+    "schoolbus": "Time for school!", "tractor": "Putt, putt, putt!",
+}
+PRAISE_EN = ["Great job!", "Well done!", "Awesome!"]
+
 
 def build_lines(name="图图"):
     praise = ["太棒了！", "真厉害！", "答对啦！", name + "真棒！", "好聪明呀！"]
@@ -72,12 +84,16 @@ def build_lines(name="图图"):
         lines["a_" + vid] = (act, "zh")
         lines["q_" + vid] = ("找一找，哪一个是" + zh + "？", "zh")
         lines["w_" + vid] = ("这是" + zh + "，", "zh")
+        lines["qe_" + vid] = ("Where is the " + en.lower() + "?", "en")
+        lines["v_" + vid] = (ACT_EN[vid], "en")
     for sid, q, win in SCENES:
         lines["s_" + sid] = (q, "zh")
         lines["sw_" + sid] = (win, "zh")
     lines["sw_thief"] = ("呜哇呜哇！警察叔叔把坏人抓住啦！" + name + "立大功！", "zh")
     for i, p in enumerate(praise):
         lines["praise_%d" % i] = (p, "zh")
+    for i, p in enumerate(PRAISE_EN):
+        lines["pe_%d" % i] = (p, "en")
     lines["welcome"] = ("你好呀！欢迎来到" + name + "认车车！点一点，认识好多车车吧！", "zh")
     lines["try_again"] = ("哎呀，再试试！", "zh")
     lines["play_hint"] = ("用小手把车车拖到上面的画里，试试看！", "zh")
